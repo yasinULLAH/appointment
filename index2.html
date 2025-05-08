@@ -1,0 +1,1760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AppointMe Solo</title>
+    <meta name="author" content="Yasin Ullah Pakistani">
+    <style>
+        :root {
+            --primary-color: #007bff;
+            --secondary-color: #6c757d;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --info-color: #17a2b8;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+            --background-color-light: #ffffff;
+            --text-color-light: #212529;
+            --border-color-light: #dee2e6;
+            --background-color-dark: #212529;
+            --text-color-dark: #f8f9fa;
+            --border-color-dark: #495057;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: var(--background-color-light);
+            color: var(--text-color-light);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        body.dark-theme {
+            background-color: var(--background-color-dark);
+            color: var(--text-color-dark);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 10px 0;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 2em;
+        }
+
+        nav {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        nav button {
+            padding: 10px 15px;
+            border: none;
+            background-color: var(--secondary-color);
+            color: white;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        nav button:hover {
+            background-color: #5a6268;
+        }
+
+        .content-section {
+            display: none;
+            padding: 20px;
+            border: 1px solid var(--border-color-light);
+            border-radius: 8px;
+            background-color: var(--background-color-light);
+            margin-bottom: 20px;
+        }
+
+        body.dark-theme .content-section {
+            border-color: var(--border-color-dark);
+            background-color: var(--background-color-dark);
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        h2 {
+            color: var(--primary-color);
+            margin-top: 0;
+        }
+
+        body.dark-theme h2 {
+            color: var(--light-color);
+        }
+
+        form label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        form input[type="text"],
+        form input[type="number"],
+        form input[type="email"],
+        form input[type="tel"],
+        form input[type="date"],
+        form input[type="time"],
+        form select,
+        form textarea {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid var(--border-color-light);
+            border-radius: 4px;
+            background-color: var(--background-color-light);
+            color: var(--text-color-light);
+        }
+
+        body.dark-theme form input[type="text"],
+        body.dark-theme form input[type="number"],
+        body.dark-theme form input[type="email"],
+        body.dark-theme form input[type="tel"],
+        body.dark-theme form input[type="date"],
+        body.dark-theme form input[type="time"],
+        body.dark-theme form select,
+        body.dark-theme form textarea {
+            border-color: var(--border-color-dark);
+            background-color: var(--background-color-dark);
+            color: var(--text-color-dark);
+        }
+
+        form button {
+            padding: 10px 20px;
+            background-color: var(--success-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        form button:hover {
+            background-color: #218838;
+        }
+
+        .list-container {
+            margin-top: 20px;
+        }
+
+        .list-item {
+            border: 1px solid var(--border-color-light);
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            background-color: var(--light-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        body.dark-theme .list-item {
+            border-color: var(--border-color-dark);
+            background-color: var(--dark-color);
+        }
+
+        .list-item span {
+            flex-grow: 1;
+            margin-right: 10px;
+        }
+
+        .list-item .actions button {
+            padding: 5px 10px;
+            margin-left: 5px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .list-item .actions .edit {
+            background-color: var(--warning-color);
+            color: var(--dark-color);
+        }
+
+        .list-item .actions .delete {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        .list-item .actions .edit:hover {
+            background-color: #e0a800;
+        }
+
+        .list-item .actions .delete:hover {
+            background-color: #c82333;
+        }
+
+        /* Calendar Styles */
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .calendar-header button {
+            padding: 8px 12px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .calendar-header button:hover {
+            background-color: #0056b3;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+        }
+
+        .calendar-day-header {
+            text-align: center;
+            font-weight: bold;
+            padding: 5px;
+            border-bottom: 1px solid var(--border-color-light);
+        }
+
+        body.dark-theme .calendar-day-header {
+            border-color: var(--border-color-dark);
+        }
+
+        .calendar-day {
+            min-height: 100px;
+            border: 1px solid var(--border-color-light);
+            padding: 5px;
+            border-radius: 4px;
+            overflow-y: auto;
+            background-color: var(--light-color);
+            cursor: pointer;
+        }
+
+        body.dark-theme .calendar-day {
+            border-color: var(--border-color-dark);
+            background-color: var(--dark-color);
+        }
+
+        .calendar-day.today {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+        }
+
+        .calendar-day.outside-month {
+            opacity: 0.6;
+        }
+
+        .calendar-day .day-number {
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .appointment-entry {
+            background-color: var(--info-color);
+            color: white;
+            padding: 3px 5px;
+            margin-bottom: 3px;
+            border-radius: 3px;
+            font-size: 0.8em;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+
+        .appointment-entry.confirmed { background-color: var(--success-color); }
+        .appointment-entry.completed { background-color: var(--secondary-color); }
+        .appointment-entry.cancelled { background-color: var(--danger-color); text-decoration: line-through; }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+
+        .modal-content {
+            background-color: var(--background-color-light);
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid var(--border-color-light);
+            width: 80%;
+            max-width: 500px;
+            border-radius: 8px;
+            position: relative;
+        }
+
+        body.dark-theme .modal-content {
+            background-color: var(--background-color-dark);
+            border-color: var(--border-color-dark);
+        }
+
+        .close-button {
+            color: var(--secondary-color);
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close-button:hover,
+        .close-button:focus {
+            color: var(--dark-color);
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        body.dark-theme .close-button {
+            color: var(--text-color-dark);
+        }
+
+        body.dark-theme .close-button:hover,
+        body.dark-theme .close-button:focus {
+            color: var(--light-color);
+        }
+
+        /* Theme Toggle */
+        .theme-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 10px;
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2em;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .theme-toggle:hover {
+            background-color: #5a6268;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            nav {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .calendar-grid {
+                grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            }
+
+            .modal-content {
+                width: 95%;
+                margin: 10% auto;
+            }
+        }
+
+        /* Accessibility (WCAG 2.1 AA) */
+        button, input[type="submit"], .list-item .actions button, .theme-toggle {
+            cursor: pointer;
+        }
+
+        button:focus, input[type="submit"]:focus, .list-item .actions button:focus, .theme-toggle:focus {
+            outline: 2px solid var(--primary-color);
+            outline-offset: 2px;
+        }
+
+        a:focus {
+             outline: 2px solid var(--primary-color);
+            outline-offset: 2px;
+        }
+
+        /* Ensure sufficient contrast - handled by theme colors */
+
+        /* Ensure form elements have labels */
+        label {
+            display: block; /* Already done */
+        }
+
+        /* Ensure interactive elements are large enough */
+        button, input[type="submit"], .theme-toggle {
+            min-height: 44px;
+            min-width: 44px;
+        }
+
+        /* Ensure text is readable */
+        body {
+            font-size: 1em; /* Default is usually sufficient */
+        }
+
+        /* Add skip link for screen readers (optional but good practice) */
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            background-color: var(--primary-color);
+            color: white;
+            padding: 8px;
+            z-index: 100;
+        }
+
+        .skip-link:focus {
+            top: 0;
+        }
+
+        /* Recurring Availability Styles */
+        .recurring-availability-item {
+            border: 1px solid var(--border-color-light);
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            background-color: var(--light-color);
+        }
+
+        body.dark-theme .recurring-availability-item {
+            border-color: var(--border-color-dark);
+            background-color: var(--dark-color);
+        }
+
+        .recurring-availability-item .actions {
+            margin-top: 10px;
+        }
+
+        /* Client History Styles */
+        .client-history-list {
+            margin-top: 15px;
+        }
+
+        .client-history-item {
+            border: 1px solid var(--border-color-light);
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 4px;
+            background-color: var(--light-color);
+            font-size: 0.9em;
+        }
+
+         body.dark-theme .client-history-item {
+            border-color: var(--border-color-dark);
+            background-color: var(--dark-color);
+        }
+
+        .client-history-item strong {
+            color: var(--primary-color);
+        }
+
+         body.dark-theme .client-history-item strong {
+            color: var(--light-color);
+        }
+
+        /* Export Buttons */
+        .export-buttons {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .export-buttons button {
+            padding: 10px 15px;
+            background-color: var(--info-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .export-buttons button:hover {
+            background-color: #138496;
+        }
+
+    </style>
+</head>
+<body>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <header>
+        <h1>AppointMe Solo</h1>
+    </header>
+
+    <div class="container">
+        <nav>
+            <button data-section="calendar">Calendar</button>
+            <button data-section="book-appointment">Book Appointment</button>
+            <button data-section="services">Services</button>
+            <button data-section="clients">Clients</button>
+            <button data-section="availability">Availability</button>
+            <button data-section="settings">Settings</button>
+        </nav>
+
+        <main id="main-content">
+            <section id="calendar" class="content-section active">
+                <h2>Calendar View</h2>
+                <div class="calendar-header">
+                    <button id="prevMonth">Previous</button>
+                    <h3 id="currentMonthYear"></h3>
+                    <button id="nextMonth">Next</button>
+                </div>
+                <div class="calendar-grid" id="calendarGrid">
+                    <div class="calendar-day-header">Sun</div>
+                    <div class="calendar-day-header">Mon</div>
+                    <div class="calendar-day-header">Tue</div>
+                    <div class="calendar-day-header">Wed</div>
+                    <div class="calendar-day-header">Thu</div>
+                    <div class="calendar-day-header">Fri</div>
+                    <div class="calendar-day-header">Sat</div>
+                    <!-- Calendar days will be populated here by JS -->
+                </div>
+                <div class="export-buttons">
+                    <button id="exportCsvBtn">Export Appointments (CSV)</button>
+                    <button id="exportIcsBtn">Export Appointments (ICS)</button>
+                </div>
+            </section>
+
+            <section id="book-appointment" class="content-section">
+                <h2>Book New Appointment</h2>
+                <form id="appointmentForm">
+                    <input type="hidden" id="appointmentId">
+                    <label for="clientName">Client Name:</label>
+                    <input type="text" id="clientName" required list="clientNamesList">
+                    <datalist id="clientNamesList"></datalist>
+
+                    <label for="clientContact">Client Contact (Email or Phone):</label>
+                    <input type="text" id="clientContact" required>
+
+                    <label for="appointmentService">Service:</label>
+                    <select id="appointmentService" required>
+                        <option value="">Select a Service</option>
+                        <!-- Services will be populated here -->
+                    </select>
+
+                    <label for="appointmentDate">Date:</label>
+                    <input type="date" id="appointmentDate" required>
+
+                    <label for="appointmentTime">Time:</label>
+                    <input type="time" id="appointmentTime" required>
+
+                    <label for="appointmentNotes">Notes:</label>
+                    <textarea id="appointmentNotes"></textarea>
+
+                    <label for="appointmentStatus">Status:</label>
+                    <select id="appointmentStatus">
+                        <option value="booked">Booked</option>
+                        <option value="confirmed">Confirmed</option>
+                        <option value="completed">Completed</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+
+                    <button type="submit">Book Appointment</button>
+                </form>
+            </section>
+
+            <section id="services" class="content-section">
+                <h2>Manage Services</h2>
+                <form id="serviceForm">
+                    <input type="hidden" id="serviceId">
+                    <label for="serviceName">Service Name:</label>
+                    <input type="text" id="serviceName" required>
+
+                    <label for="serviceDuration">Duration (minutes):</label>
+                    <input type="number" id="serviceDuration" required min="1">
+
+                    <label for="servicePrice">Price:</label>
+                    <input type="number" id="servicePrice" step="0.01" required min="0">
+
+                    <button type="submit">Add Service</button>
+                </form>
+                <div class="list-container" id="servicesList">
+                    <h3>Existing Services</h3>
+                    <!-- Services will be listed here -->
+                </div>
+            </section>
+
+            <section id="clients" class="content-section">
+                <h2>Manage Clients</h2>
+                <form id="clientForm">
+                    <input type="hidden" id="clientId">
+                    <label for="clientNameInput">Client Name:</label>
+                    <input type="text" id="clientNameInput" required>
+
+                    <label for="clientContactInput">Contact (Email or Phone):</label>
+                    <input type="text" id="clientContactInput" required>
+
+                    <label for="clientNotes">Notes:</label>
+                    <textarea id="clientNotes"></textarea>
+
+                    <button type="submit">Add Client</button>
+                </form>
+                <div class="list-container" id="clientsList">
+                    <h3>Existing Clients</h3>
+                    <!-- Clients will be listed here -->
+                </div>
+            </section>
+
+             <section id="availability" class="content-section">
+                <h2>Manage Availability</h2>
+                <p>Set your regular working hours or specific time slots.</p>
+                <form id="availabilityForm">
+                    <input type="hidden" id="availabilityId">
+                    <label for="availabilityDay">Day of Week:</label>
+                    <select id="availabilityDay" required>
+                        <option value="">Select Day</option>
+                        <option value="0">Sunday</option>
+                        <option value="1">Monday</option>
+                        <option value="2">Tuesday</option>
+                        <option value="3">Wednesday</option>
+                        <option value="4">Thursday</option>
+                        <option value="5">Friday</option>
+                        <option value="6">Saturday</option>
+                    </select>
+
+                    <label for="availabilityStartTime">Start Time:</label>
+                    <input type="time" id="availabilityStartTime" required>
+
+                    <label for="availabilityEndTime">End Time:</label>
+                    <input type="time" id="availabilityEndTime" required>
+
+                    <button type="submit">Add Availability</button>
+                </form>
+                 <div class="list-container" id="availabilityList">
+                    <h3>Recurring Availability</h3>
+                    <!-- Availability will be listed here -->
+                </div>
+            </section>
+
+            <section id="settings" class="content-section">
+                <h2>Settings</h2>
+                <p>Future settings options could go here (e.g., default service, notification preferences).</p>
+                <button id="requestNotificationPermission">Request Notification Permission</button>
+            </section>
+        </main>
+    </div>
+
+    <!-- Appointment Details Modal -->
+    <div id="appointmentModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">×</span>
+            <h2 id="modalAppointmentTitle">Appointment Details</h2>
+            <p><strong>Client:</strong> <span id="modalClientName"></span></p>
+            <p><strong>Contact:</strong> <span id="modalClientContact"></span></p>
+            <p><strong>Service:</strong> <span id="modalService"></span></p>
+            <p><strong>Date:</strong> <span id="modalDate"></span></p>
+            <p><strong>Time:</strong> <span id="modalTime"></span></p>
+            <p><strong>Duration:</strong> <span id="modalDuration"></span> minutes</p>
+            <p><strong>Price:</strong> <span id="modalPrice"></span></p>
+            <p><strong>Status:</strong> <span id="modalStatus"></span></p>
+            <p><strong>Notes:</strong> <span id="modalNotes"></span></p>
+            <div class="actions">
+                <button class="edit" id="editAppointmentBtn">Edit</button>
+                <button class="delete" id="deleteAppointmentBtn">Delete</button>
+            </div>
+        </div>
+    </div>
+
+     <!-- Client History Modal -->
+    <div id="clientHistoryModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">×</span>
+            <h2 id="modalClientHistoryTitle">Client History</h2>
+            <p><strong>Client:</strong> <span id="modalHistoryClientName"></span></p>
+            <p><strong>Contact:</strong> <span id="modalHistoryClientContact"></span></p>
+            <div class="client-history-list" id="clientAppointmentsHistory">
+                <!-- Client appointment history will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark/light theme">🌙</button>
+
+    <script>
+        const DB_NAME = 'AppointMeSoloDB';
+        const DB_VERSION = 1;
+        let db;
+
+        const sections = document.querySelectorAll('.content-section');
+        const navButtons = document.querySelectorAll('nav button');
+        const themeToggle = document.getElementById('themeToggle');
+
+        // IndexedDB Initialization
+        function openDatabase() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+                request.onupgradeneeded = (event) => {
+                    db = event.target.result;
+                    if (!db.objectStoreNames.contains('services')) {
+                        db.createObjectStore('services', { keyPath: 'id', autoIncrement: true });
+                    }
+                    if (!db.objectStoreNames.contains('clients')) {
+                        db.createObjectStore('clients', { keyPath: 'id', autoIncrement: true });
+                    }
+                     if (!db.objectStoreNames.contains('availability')) {
+                        db.createObjectStore('availability', { keyPath: 'id', autoIncrement: true });
+                    }
+                    if (!db.objectStoreNames.contains('appointments')) {
+                        const appointmentStore = db.createObjectStore('appointments', { keyPath: 'id', autoIncrement: true });
+                        appointmentStore.createIndex('date', 'date', { unique: false });
+                        appointmentStore.createIndex('clientId', 'clientId', { unique: false });
+                    }
+                };
+
+                request.onsuccess = (event) => {
+                    db = event.target.result;
+                    console.log('Database opened successfully');
+                    resolve(db);
+                };
+
+                request.onerror = (event) => {
+                    console.error('Database error:', event.target.errorCode);
+                    reject(event.target.errorCode);
+                };
+            });
+        }
+
+        // Generic IndexedDB Operations
+        function addObject(storeName, object) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([storeName], 'readwrite');
+                const store = transaction.objectStore(storeName);
+                const request = store.add(object);
+
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = (event) => reject(event.target.error);
+            });
+        }
+
+        function getObject(storeName, id) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([storeName], 'readonly');
+                const store = transaction.objectStore(storeName);
+                const request = store.get(id);
+
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = (event) => reject(event.target.error);
+            });
+        }
+
+         function getAllObjects(storeName, index = null, range = null) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([storeName], 'readonly');
+                const store = transaction.objectStore(storeName);
+                const request = index ? store.index(index).openCursor(range) : store.openCursor();
+                const results = [];
+
+                request.onsuccess = (event) => {
+                    const cursor = event.target.result;
+                    if (cursor) {
+                        results.push(cursor.value);
+                        cursor.continue();
+                    } else {
+                        resolve(results);
+                    }
+                };
+
+                request.onerror = (event) => reject(event.target.error);
+            });
+        }
+
+
+        function updateObject(storeName, object) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([storeName], 'readwrite');
+                const store = transaction.objectStore(storeName);
+                const request = store.put(object);
+
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = (event) => reject(event.target.error);
+            });
+        }
+
+        function deleteObject(storeName, id) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([storeName], 'readwrite');
+                const store = transaction.objectStore(storeName);
+                const request = store.delete(id);
+
+                request.onsuccess = () => resolve();
+                request.onerror = (event) => reject(event.target.error);
+            });
+        }
+
+        // UI Navigation
+        function showSection(sectionId) {
+            sections.forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById(sectionId).classList.add('active');
+
+            navButtons.forEach(button => {
+                if (button.getAttribute('data-section') === sectionId) {
+                    button.style.backgroundColor = "var('--primary-color')";
+                    button.style.color = 'white';
+                } else {
+                     button.style.backgroundColor = "var('--secondary-color')";
+                     button.style.color = 'white';
+                }
+            });
+
+            // Load data for the active section
+            if (sectionId === 'calendar') {
+                renderCalendar(currentDate);
+            } else if (sectionId === 'services') {
+                loadServices();
+            } else if (sectionId === 'clients') {
+                loadClients();
+            } else if (sectionId === 'book-appointment') {
+                 loadServicesForAppointmentForm();
+                 loadClientNamesForDatalist();
+            } else if (sectionId === 'availability') {
+                 loadAvailability();
+            }
+        }
+
+        navButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                showSection(button.getAttribute('data-section'));
+            });
+        });
+
+        // Theme Toggle
+        function toggleTheme() {
+            document.body.classList.toggle('dark-theme');
+            const isDark = document.body.classList.contains('dark-theme');
+            themeToggle.textContent = isDark ? '☀️' : '🌙';
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        }
+
+        themeToggle.addEventListener('click', toggleTheme);
+
+        // Apply saved theme on load
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') {
+            document.body.classList.add('dark-theme');
+            themeToggle.textContent = '☀️';
+        } else {
+             themeToggle.textContent = '🌙';
+        }
+
+
+        // Services Management
+        const serviceForm = document.getElementById('serviceForm');
+        const servicesList = document.getElementById('servicesList');
+
+        async function addOrUpdateService(event) {
+            event.preventDefault();
+            const id = document.getElementById('serviceId').value;
+            const name = document.getElementById('serviceName').value;
+            const duration = parseInt(document.getElementById('serviceDuration').value, 10);
+            const price = parseFloat(document.getElementById('servicePrice').value);
+
+            const service = { name, duration, price };
+
+            try {
+                if (id) {
+                    service.id = parseInt(id, 10);
+                    await updateObject('services', service);
+                    alert('Service updated successfully!');
+                } else {
+                    await addObject('services', service);
+                    alert('Service added successfully!');
+                }
+                serviceForm.reset();
+                document.getElementById('serviceId').value = '';
+                serviceForm.querySelector('button[type="submit"]').textContent = 'Add Service';
+                loadServices();
+                 loadServicesForAppointmentForm(); // Update appointment form service list
+            } catch (error) {
+                console.error('Error saving service:', error);
+                alert('Failed to save service.');
+            }
+        }
+
+        async function loadServices() {
+            try {
+                const services = await getAllObjects('services');
+                servicesList.innerHTML = '<h3>Existing Services</h3>';
+                if (services.length === 0) {
+                    servicesList.innerHTML += '<p>No services added yet.</p>';
+                    return;
+                }
+                services.forEach(service => {
+                    const div = document.createElement('div');
+                    div.classList.add('list-item');
+                    div.innerHTML = `
+                        <span>${service.name} (${service.duration} mins) - $${service.price.toFixed(2)}</span>
+                        <div class="actions">
+                            <button class="edit" data-id="${service.id}">Edit</button>
+                            <button class="delete" data-id="${service.id}">Delete</button>
+                        </div>
+                    `;
+                    servicesList.appendChild(div);
+                });
+
+                servicesList.querySelectorAll('.edit').forEach(button => {
+                    button.addEventListener('click', editService);
+                });
+                servicesList.querySelectorAll('.delete').forEach(button => {
+                    button.addEventListener('click', deleteService);
+                });
+
+            } catch (error) {
+                console.error('Error loading services:', error);
+                servicesList.innerHTML = '<p>Error loading services.</p>';
+            }
+        }
+
+        async function editService(event) {
+            const id = parseInt(event.target.getAttribute('data-id'), 10);
+            try {
+                const service = await getObject('services', id);
+                if (service) {
+                    document.getElementById('serviceId').value = service.id;
+                    document.getElementById('serviceName').value = service.name;
+                    document.getElementById('serviceDuration').value = service.duration;
+                    document.getElementById('servicePrice').value = service.price;
+                    serviceForm.querySelector('button[type="submit"]').textContent = 'Update Service';
+                }
+            } catch (error) {
+                console.error('Error fetching service for edit:', error);
+                alert('Failed to load service for editing.');
+            }
+        }
+
+        async function deleteService(event) {
+            const id = parseInt(event.target.getAttribute('data-id'), 10);
+            if (confirm('Are you sure you want to delete this service?')) {
+                try {
+                    await deleteObject('services', id);
+                    alert('Service deleted successfully!');
+                    loadServices();
+                     loadServicesForAppointmentForm(); // Update appointment form service list
+                } catch (error) {
+                    console.error('Error deleting service:', error);
+                    alert('Failed to delete service.');
+                }
+            }
+        }
+
+        serviceForm.addEventListener('submit', addOrUpdateService);
+
+
+        // Clients Management
+        const clientForm = document.getElementById('clientForm');
+        const clientsList = document.getElementById('clientsList');
+        const clientNamesDatalist = document.getElementById('clientNamesList');
+
+        async function addOrUpdateClient(event) {
+            event.preventDefault();
+            const id = document.getElementById('clientId').value;
+            const name = document.getElementById('clientNameInput').value;
+            const contact = document.getElementById('clientContactInput').value;
+            const notes = document.getElementById('clientNotes').value;
+
+            const client = { name, contact, notes };
+
+            try {
+                if (id) {
+                    client.id = parseInt(id, 10);
+                    await updateObject('clients', client);
+                    alert('Client updated successfully!');
+                } else {
+                    await addObject('clients', client);
+                    alert('Client added successfully!');
+                }
+                clientForm.reset();
+                document.getElementById('clientId').value = '';
+                clientForm.querySelector('button[type="submit"]').textContent = 'Add Client';
+                loadClients();
+                loadClientNamesForDatalist(); // Update datalist
+            } catch (error) {
+                console.error('Error saving client:', error);
+                alert('Failed to save client.');
+            }
+        }
+
+        async function loadClients() {
+            try {
+                const clients = await getAllObjects('clients');
+                clientsList.innerHTML = '<h3>Existing Clients</h3>';
+                 if (clients.length === 0) {
+                    clientsList.innerHTML += '<p>No clients added yet.</p>';
+                    return;
+                }
+                for (const client of clients) {
+                     const div = document.createElement('div');
+                    div.classList.add('list-item');
+                    div.innerHTML = `
+                        <span>${client.name} (${client.contact})</span>
+                        <div class="actions">
+                            <button class="view-history" data-id="${client.id}">History</button>
+                            <button class="edit" data-id="${client.id}">Edit</button>
+                            <button class="delete" data-id="${client.id}">Delete</button>
+                        </div>
+                    `;
+                    clientsList.appendChild(div);
+                }
+
+
+                clientsList.querySelectorAll('.edit').forEach(button => {
+                    button.addEventListener('click', editClient);
+                });
+                clientsList.querySelectorAll('.delete').forEach(button => {
+                    button.addEventListener('click', deleteClient);
+                });
+                 clientsList.querySelectorAll('.view-history').forEach(button => {
+                    button.addEventListener('click', viewClientHistory);
+                });
+
+            } catch (error) {
+                console.error('Error loading clients:', error);
+                clientsList.innerHTML = '<p>Error loading clients.</p>';
+            }
+        }
+
+        async function editClient(event) {
+            const id = parseInt(event.target.getAttribute('data-id'), 10);
+            try {
+                const client = await getObject('clients', id);
+                if (client) {
+                    document.getElementById('clientId').value = client.id;
+                    document.getElementById('clientNameInput').value = client.name;
+                    document.getElementById('clientContactInput').value = client.contact;
+                    document.getElementById('clientNotes').value = client.notes;
+                    clientForm.querySelector('button[type="submit"]').textContent = 'Update Client';
+                }
+            } catch (error) {
+                console.error('Error fetching client for edit:', error);
+                alert('Failed to load client for editing.');
+            }
+        }
+
+        async function deleteClient(event) {
+            const id = parseInt(event.target.getAttribute('data-id'), 10);
+            if (confirm('Are you sure you want to delete this client and their appointments?')) {
+                try {
+                    // Delete client's appointments first
+                    const clientAppointments = await getAllObjects('appointments', 'clientId', IDBKeyRange.only(id));
+                    for (const appt of clientAppointments) {
+                        await deleteObject('appointments', appt.id);
+                    }
+                    await deleteObject('clients', id);
+                    alert('Client and their appointments deleted successfully!');
+                    loadClients();
+                    loadClientNamesForDatalist(); // Update datalist
+                    renderCalendar(currentDate); // Refresh calendar
+                } catch (error) {
+                    console.error('Error deleting client:', error);
+                    alert('Failed to delete client.');
+                }
+            }
+        }
+
+        async function loadClientNamesForDatalist() {
+             try {
+                const clients = await getAllObjects('clients');
+                clientNamesDatalist.innerHTML = '';
+                clients.forEach(client => {
+                    const option = document.createElement('option');
+                    option.value = client.name;
+                    clientNamesDatalist.appendChild(option);
+                });
+             } catch (error) {
+                 console.error('Error loading client names for datalist:', error);
+             }
+        }
+
+        clientForm.addEventListener('submit', addOrUpdateClient);
+
+        // Client History Modal
+        const clientHistoryModal = document.getElementById('clientHistoryModal');
+        const modalHistoryClientName = document.getElementById('modalHistoryClientName');
+        const modalHistoryClientContact = document.getElementById('modalHistoryClientContact');
+        const clientAppointmentsHistory = document.getElementById('clientAppointmentsHistory');
+
+        async function viewClientHistory(event) {
+            const clientId = parseInt(event.target.getAttribute('data-id'), 10);
+            try {
+                const client = await getObject('clients', clientId);
+                if (!client) {
+                    alert('Client not found.');
+                    return;
+                }
+
+                modalHistoryClientName.textContent = client.name;
+                modalHistoryClientContact.textContent = client.contact;
+                clientAppointmentsHistory.innerHTML = '';
+
+                const appointments = await getAllObjects('appointments', 'clientId', IDBKeyRange.only(clientId));
+
+                if (appointments.length === 0) {
+                    clientAppointmentsHistory.innerHTML = '<p>No appointment history for this client.</p>';
+                } else {
+                    // Sort appointments by date and time
+                    appointments.sort((a, b) => {
+                        const dateA = new Date(`${a.date}T${a.time}`);
+                        const dateB = new Date(`${b.date}T${b.time}`);
+                        return dateB - dateA; // Newest first
+                    });
+
+                    for (const appt of appointments) {
+                         const service = await getObject('services', appt.serviceId);
+                         const serviceName = service ? service.name : 'Unknown Service';
+                         const div = document.createElement('div');
+                         div.classList.add('client-history-item');
+                         div.innerHTML = `
+                            <p><strong>Date:</strong> ${appt.date}</p>
+                            <p><strong>Time:</strong> ${appt.time}</p>
+                            <p><strong>Service:</strong> ${serviceName}</p>
+                            <p><strong>Status:</strong> ${appt.status}</p>
+                            ${appt.notes ? `<p><strong>Notes:</strong> ${appt.notes}</p>` : ''}
+                         `;
+                         clientAppointmentsHistory.appendChild(div);
+                    }
+                }
+
+                clientHistoryModal.style.display = 'block';
+
+            } catch (error) {
+                console.error('Error loading client history:', error);
+                alert('Failed to load client history.');
+            }
+        }
+
+        // Close modals
+        document.querySelectorAll('.modal .close-button').forEach(button => {
+            button.addEventListener('click', (event) => {
+                event.target.closest('.modal').style.display = 'none';
+            });
+        });
+
+        window.addEventListener('click', (event) => {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
+        });
+
+
+        // Availability Management
+        const availabilityForm = document.getElementById('availabilityForm');
+        const availabilityList = document.getElementById('availabilityList');
+
+        async function addOrUpdateAvailability(event) {
+            event.preventDefault();
+            const id = document.getElementById('availabilityId').value;
+            const day = parseInt(document.getElementById('availabilityDay').value, 10);
+            const startTime = document.getElementById('availabilityStartTime').value;
+            const endTime = document.getElementById('availabilityEndTime').value;
+
+            const availability = { day, startTime, endTime };
+
+            try {
+                if (id) {
+                    availability.id = parseInt(id, 10);
+                    await updateObject('availability', availability);
+                    alert('Availability updated successfully!');
+                } else {
+                    await addObject('availability', availability);
+                    alert('Availability added successfully!');
+                }
+                availabilityForm.reset();
+                document.getElementById('availabilityId').value = '';
+                availabilityForm.querySelector('button[type="submit"]').textContent = 'Add Availability';
+                loadAvailability();
+            } catch (error) {
+                console.error('Error saving availability:', error);
+                alert('Failed to save availability.');
+            }
+        }
+
+        async function loadAvailability() {
+            try {
+                const availability = await getAllObjects('availability');
+                availabilityList.innerHTML = '<h3>Recurring Availability</h3>';
+                 if (availability.length === 0) {
+                    availabilityList.innerHTML += '<p>No recurring availability set yet.</p>';
+                    return;
+                }
+                const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+                availability.forEach(item => {
+                    const div = document.createElement('div');
+                    div.classList.add('recurring-availability-item');
+                    div.innerHTML = `
+                        <p><strong>Day:</strong> ${daysOfWeek[item.day]}</p>
+                        <p><strong>Time:</strong> ${item.startTime} - ${item.endTime}</p>
+                        <div class="actions">
+                            <button class="edit" data-id="${item.id}">Edit</button>
+                            <button class="delete" data-id="${item.id}">Delete</button>
+                        </div>
+                    `;
+                    availabilityList.appendChild(div);
+                });
+
+                availabilityList.querySelectorAll('.edit').forEach(button => {
+                    button.addEventListener('click', editAvailability);
+                });
+                availabilityList.querySelectorAll('.delete').forEach(button => {
+                    button.addEventListener('click', deleteAvailability);
+                });
+
+            } catch (error) {
+                console.error('Error loading availability:', error);
+                availabilityList.innerHTML = '<p>Error loading availability.</p>';
+            }
+        }
+
+         async function editAvailability(event) {
+            const id = parseInt(event.target.getAttribute('data-id'), 10);
+            try {
+                const availability = await getObject('availability', id);
+                if (availability) {
+                    document.getElementById('availabilityId').value = availability.id;
+                    document.getElementById('availabilityDay').value = availability.day;
+                    document.getElementById('availabilityStartTime').value = availability.startTime;
+                    document.getElementById('availabilityEndTime').value = availability.endTime;
+                    availabilityForm.querySelector('button[type="submit"]').textContent = 'Update Availability';
+                }
+            } catch (error) {
+                console.error('Error fetching availability for edit:', error);
+                alert('Failed to load availability for editing.');
+            }
+        }
+
+        async function deleteAvailability(event) {
+            const id = parseInt(event.target.getAttribute('data-id'), 10);
+            if (confirm('Are you sure you want to delete this availability slot?')) {
+                try {
+                    await deleteObject('availability', id);
+                    alert('Availability deleted successfully!');
+                    loadAvailability();
+                } catch (error) {
+                    console.error('Error deleting availability:', error);
+                    alert('Failed to delete availability.');
+                }
+            }
+        }
+
+
+        availabilityForm.addEventListener('submit', addOrUpdateAvailability);
+
+
+        // Appointment Management
+        const appointmentForm = document.getElementById('appointmentForm');
+        const appointmentServiceSelect = document.getElementById('appointmentService');
+        const appointmentModal = document.getElementById('appointmentModal');
+        const modalAppointmentTitle = document.getElementById('modalAppointmentTitle');
+        const modalClientName = document.getElementById('modalClientName');
+        const modalClientContact = document.getElementById('modalClientContact');
+        const modalService = document.getElementById('modalService');
+        const modalDate = document.getElementById('modalDate');
+        const modalTime = document.getElementById('modalTime');
+        const modalDuration = document.getElementById('modalDuration');
+        const modalPrice = document.getElementById('modalPrice');
+        const modalStatus = document.getElementById('modalStatus');
+        const modalNotes = document.getElementById('modalNotes');
+        const editAppointmentBtn = document.getElementById('editAppointmentBtn');
+        const deleteAppointmentBtn = document.getElementById('deleteAppointmentBtn');
+
+        async function loadServicesForAppointmentForm() {
+            try {
+                const services = await getAllObjects('services');
+                appointmentServiceSelect.innerHTML = '<option value="">Select a Service</option>';
+                services.forEach(service => {
+                    const option = document.createElement('option');
+                    option.value = service.id;
+                    option.textContent = `${service.name} (${service.duration} mins, $${service.price.toFixed(2)})`;
+                    option.setAttribute('data-duration', service.duration);
+                    option.setAttribute('data-price', service.price);
+                    appointmentServiceSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading services for appointment form:', error);
+            }
+        }
+
+        async function addOrUpdateAppointment(event) {
+            event.preventDefault();
+            const id = document.getElementById('appointmentId').value;
+            const clientName = document.getElementById('clientName').value;
+            const clientContact = document.getElementById('clientContact').value;
+            const serviceId = parseInt(document.getElementById('appointmentService').value, 10);
+            const date = document.getElementById('appointmentDate').value;
+            const time = document.getElementById('appointmentTime').value;
+            const notes = document.getElementById('appointmentNotes').value;
+            const status = document.getElementById('appointmentStatus').value;
+
+            if (!clientName || !clientContact || !serviceId || !date || !time) {
+                alert('Please fill in all required fields.');
+                return;
+            }
+
+            try {
+                // Find or create client
+                let client = (await getAllObjects('clients')).find(c => c.name === clientName && c.contact === clientContact);
+                let clientId;
+                if (client) {
+                    clientId = client.id;
+                } else {
+                    const newClient = { name: clientName, contact: clientContact, notes: '' }; // Add notes later if needed
+                    clientId = await addObject('clients', newClient);
+                    loadClients(); // Refresh client list
+                    loadClientNamesForDatalist(); // Refresh datalist
+                }
+
+                const service = await getObject('services', serviceId);
+                 if (!service) {
+                     alert('Selected service not found.');
+                     return;
+                 }
+
+                const appointment = {
+                    clientId: clientId,
+                    serviceId: serviceId,
+                    date: date,
+                    time: time,
+                    notes: notes,
+                    status: status,
+                    serviceName: service.name, // Store service name for easier display
+                    serviceDuration: service.duration, // Store duration
+                    servicePrice: service.price // Store price
+                };
+
+                if (id) {
+                    appointment.id = parseInt(id, 10);
+                    await updateObject('appointments', appointment);
+                    alert('Appointment updated successfully!');
+                } else {
+                    await addObject('appointments', appointment);
+                    alert('Appointment booked successfully!');
+                }
+
+                appointmentForm.reset();
+                document.getElementById('appointmentId').value = '';
+                appointmentForm.querySelector('button[type="submit"]').textContent = 'Book Appointment';
+                document.getElementById('appointmentStatus').value = 'booked'; // Reset status
+                renderCalendar(currentDate); // Refresh calendar
+                appointmentModal.style.display = 'none'; // Close modal if open
+            } catch (error) {
+                console.error('Error saving appointment:', error);
+                alert('Failed to save appointment.');
+            }
+        }
+
+        async function loadAppointmentsForDate(dateString) {
+             try {
+                const appointments = await getAllObjects('appointments', 'date', IDBKeyRange.only(dateString));
+                // Fetch client and service details for each appointment
+                const appointmentsWithDetails = await Promise.all(appointments.map(async appt => {
+                    const client = await getObject('clients', appt.clientId);
+                    const service = await getObject('services', appt.serviceId);
+                    return {
+                        ...appt,
+                        clientName: client ? client.name : 'Unknown Client',
+                        clientContact: client ? client.contact : 'N/A',
+                        serviceName: service ? service.name : 'Unknown Service',
+                        serviceDuration: service ? service.duration : 0,
+                        servicePrice: service ? service.price : 0
+                    };
+                }));
+                // Sort appointments by time
+                appointmentsWithDetails.sort((a, b) => {
+                    if (a.time < b.time) return -1;
+                    if (a.time > b.time) return 1;
+                    return 0;
+                });
+                return appointmentsWithDetails;
+             } catch (error) {
+                 console.error('Error loading appointments for date:', error);
+                 return [];
+             }
+        }
+
+        async function viewAppointmentDetails(appointmentId) {
+            try {
+                const appointment = await getObject('appointments', appointmentId);
+                if (!appointment) {
+                    alert('Appointment not found.');
+                    return;
+                }
+
+                const client = await getObject('clients', appointment.clientId);
+                const service = await getObject('services', appointment.serviceId);
+
+                modalAppointmentTitle.textContent = 'Appointment Details';
+                modalClientName.textContent = client ? client.name : 'Unknown Client';
+                modalClientContact.textContent = client ? client.contact : 'N/A';
+                modalService.textContent = service ? service.name : 'Unknown Service';
+                modalDate.textContent = appointment.date;
+                modalTime.textContent = appointment.time;
+                modalDuration.textContent = service ? service.duration : 'N/A';
+                modalPrice.textContent = service ? service.price.toFixed(2) : 'N/A';
+                modalStatus.textContent = appointment.status;
+                modalNotes.textContent = appointment.notes || 'None';
+
+                editAppointmentBtn.setAttribute('data-id', appointment.id);
+                deleteAppointmentBtn.setAttribute('data-id', appointment.id);
+
+                appointmentModal.style.display = 'block';
+
+            } catch (error) {
+                console.error('Error loading appointment details:', error);
+                alert('Failed to load appointment details.');
+            }
+        }
+
+        async function editAppointment(event) {
+            const id = parseInt(event.target.getAttribute('data-id'), 10);
+            try {
+                const appointment = await getObject('appointments', id);
+                 if (!appointment) {
+                    alert('Appointment not found.');
+                    return;
+                }
+                const client = await getObject('clients', appointment.clientId);
+
+                document.getElementById('appointmentId').value = appointment.id;
+                document.getElementById('clientName').value = client ? client.name : '';
+                document.getElementById('clientContact').value = client ? client.contact : '';
+                document.getElementById('appointmentService').value = appointment.serviceId;
+                document.getElementById('appointmentDate').value = appointment.date;
+                document.getElementById('appointmentTime').value = appointment.time;
+                document.getElementById('appointmentNotes').value = appointment.notes;
+                document.getElementById('appointmentStatus').value = appointment.status;
+
+                appointmentForm.querySelector('button[type="submit"]').textContent = 'Update Appointment';
+                appointmentModal.style.display = 'none'; // Close modal
+                showSection('book-appointment'); // Switch to booking section
+            } catch (error) {
+                 console.error('Error fetching appointment for edit:', error);
+                 alert('Failed to load appointment for editing.');
+            }
+        }
+
+        async function deleteAppointment(event) {
+            const id = parseInt(event.target.getAttribute('data-id'), 10);
+            if (confirm('Are you sure you want to delete this appointment?')) {
+                try {
+                    await deleteObject('appointments', id);
+                    alert('Appointment deleted successfully!');
+                    appointmentModal.style.display = 'none'; // Close modal
+                    renderCalendar(currentDate); // Refresh calendar
+                } catch (error) {
+                    console.error('Error deleting appointment:', error);
+                    alert('Failed to delete appointment.');
+                }
+            }
+        }
+
+        appointmentForm.addEventListener('submit', addOrUpdateAppointment);
+        editAppointmentBtn.addEventListener('click', editAppointment);
+        deleteAppointmentBtn.addEventListener('click', deleteAppointment);
+
+
+        // Calendar Rendering
+        const calendarGrid = document.getElementById('calendarGrid');
+        const currentMonthYearHeader = document.getElementById('currentMonthYear');
+        const prevMonthBtn = document.getElementById('prevMonth');
+        const nextMonthBtn = document.getElementById('nextMonth');
+
+        let currentDate = new Date();
+
+        async function renderCalendar(date) {
+            const year = date.getFullYear();
+            const month = date.getMonth(); // 0-indexed
+
+            currentMonthYearHeader.textContent = `${date.toLocaleString('default', { month: 'long' })} ${year}`;
+
+            // Clear previous days (keep headers)
+            while (calendarGrid.children.length > 7) {
+                calendarGrid.removeChild(calendarGrid.lastChild);
+            }
+
+            const firstDayOfMonth = new Date(year, month, 1);
+            const lastDayOfMonth = new Date(year, month + 1, 0);
+            const daysInMonth = lastDayOfMonth.getDate();
+
+            // Get the day of the week for the first day (0 for Sunday, 6 for Saturday)
+            const startDayOfWeek = firstDayOfMonth.getDay();
+
+            // Get the number of days from the previous month to show
+            const prevMonthDays = startDayOfWeek;
+
+            // Get the last day of the previous month
+            const lastDayOfPrevMonth = new Date(year, month, 0).getDate();
+
+            // Add days from the previous month
+            for (let i = 0; i < prevMonthDays; i++) {
+                const day = lastDayOfPrevMonth - prevMonthDays + i + 1;
+                const dayElement = document.createElement('div');
+                dayElement.classList.add('calendar-day', 'outside-month');
+                dayElement.innerHTML = `<span class="day-number">${day}</span>`;
+                calendarGrid.appendChild(dayElement);
+            }
+
+            // Add days for the current month
+            for (let i = 1; i <= daysInMonth; i++) {
+                const dayElement = document.createElement('div');
+                dayElement.classList.add('calendar-day');
+                const fullDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+                dayElement.setAttribute('data-date', fullDate);
+
+                const today = new Date();
+                if (year === today.getFullYear() && month === today.getMonth() && i === today.getDate()) {
+                    dayElement.classList.add('today');
+                }
+
+                dayElement.innerHTML = `<span class="day-number">${i}</span>`;
+
+                // Load and display appointments for this day
+                const appointments = await loadAppointmentsForDate(fullDate);
+                appointments.forEach(appt => {
+                    const apptElement = document.createElement('div');
+                    apptElement.classList.add('appointment-entry', appt.status);
+                    apptElement.textContent = `${appt.time} - ${appt.clientName}`;
+                    apptElement.setAttribute('data-id', appt.id);
+                    apptElement.addEventListener('click', () => viewAppointmentDetails(appt.id));
+                    dayElement.appendChild(apptElement);
+                });
+
+                 // Add click listener to the day element to book appointment
+                 dayElement.addEventListener('click', (event) => {
+                     // Only trigger if clicking the day itself, not an appointment entry
+                     if (event.target.classList.contains('calendar-day') || event.target.classList.contains('day-number')) {
+                         document.getElementById('appointmentDate').value = fullDate;
+                         document.getElementById('appointmentId').value = ''; // Clear any existing ID
+                         appointmentForm.querySelector('button[type="submit"]').textContent = 'Book Appointment';
+                         document.getElementById('appointmentStatus').value = 'booked'; // Reset status
+                         showSection('book-appointment');
+                     }
+                 });
+
+
+                calendarGrid.appendChild(dayElement);
+            }
+
+             // Add days from the next month to fill the grid
+            const totalDaysDisplayed = prevMonthDays + daysInMonth;
+            const nextMonthDays = (7 - (totalDaysDisplayed % 7)) % 7;
+
+            for (let i = 1; i <= nextMonthDays; i++) {
+                const dayElement = document.createElement('div');
+                dayElement.classList.add('calendar-day', 'outside-month');
+                dayElement.innerHTML = `<span class="day-number">${i}</span>`;
+                calendarGrid.appendChild(dayElement);
+            }
+        }
+
+        prevMonthBtn.addEventListener('click', () => {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            renderCalendar(currentDate);
+        });
+
+        nextMonthBtn.addEventListener('click', () => {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            renderCalendar(currentDate);
+        });
+
+
+        // Notifications
+        const requestNotificationPermissionBtn = document.getElementById('requestNotificationPermission');
+
+        requestNotificationPermissionBtn.addEventListener('click', async () => {
+            if (!('Notification' in window)) {
+                alert('This browser does not support desktop notification');
+                return;
+            }
+
+            const permission = await Notification.requestPermission();
+            if (permission === 'granted') {
+                alert('Notification permission granted!');
+            } else {
+                alert('Notification permission denied.');
+            }
+        });
+
+        function scheduleNotifications() {
+            if (Notification.permission !== 'granted') {
+                console.warn('Notification permission not granted.');
+                return;
+            }
+
+            // Clear previous reminders (if any logic exists for this)
+            // For simplicity, we'll just check upcoming appointments
+
+            const now = new Date();
+            const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000); // Check for appointments in the next hour
+
+            getAllObjects('appointments').then(appointments => {
+                appointments.forEach(async appt => {
+                    const apptDateTime = new Date(`${appt.date}T${appt.time}`);
+
+                    // Check if appointment is in the future and within the next hour
+                    if (apptDateTime > now && apptDateTime <= oneHourFromNow && appt.status !== 'cancelled') {
+                         const client = await getObject('clients', appt.clientId);
+                         const service = await getObject('services', appt.serviceId);
+                         const clientName = client ? client.name : 'Unknown Client';
+                         const serviceName = service ? service.name : 'Unknown Service';
+
+                        new Notification('Upcoming Appointment', {
+                            body: `Appointment with ${clientName} for ${serviceName} at ${appt.time} today.`,
+                            icon: 'path/to/your/icon.png' // Optional: Add an icon
+                        });
+                    }
+                });
+            }).catch(error => {
+                console.error('Error scheduling notifications:', error);
+            });
+        }
+
+        // Schedule notifications periodically (e.g., every 15 minutes)
+        // This is basic and only works if the app is open. A Service Worker would be needed for background notifications.
+        setInterval(scheduleNotifications, 15 * 60 * 1000); // Check every 15 minutes
+        scheduleNotifications(); // Run once on load
+
+
+        // Export Functionality
+        const exportCsvBtn = document.getElementById('exportCsvBtn');
+        const exportIcsBtn = document.getElementById('exportIcsBtn');
+
+        async function exportAppointmentsCsv() {
+            try {
+                const appointments = await getAllObjects('appointments');
+                 if (appointments.length === 0) {
+                    alert('No appointments to export.');
+                    return;
+                }
+
+                const csvRows = [];
+                // Add header row
+                csvRows.push('"ID","Client Name","Client Contact","Service","Date","Time","Duration (mins)","Price","Status","Notes"');
+
+                for (const appt of appointments) {
+                    const client = await getObject('clients', appt.clientId);
+                    const service = await getObject('services', appt.serviceId);
+
+                    const clientName = client ? `"${client.name.replace(/"/g, '""')}"` : '"Unknown Client"';
+                    const clientContact = client ? `"${client.contact.replace(/"/g, '""')}"` : '"N/A"';
+                    const serviceName = service ? `"${service.name.replace(/"/g, '""')}"` : '"Unknown Service"';
+                    const serviceDuration = service ? service.duration : 'N/A';
+                    const servicePrice = service ? service.price.toFixed(2) : 'N/A';
+                    const notes = appt.notes ? `"${appt.notes.replace(/"/g, '""')}"` : '""';
+
+                    csvRows.push(`${appt.id},${clientName},${clientContact},${serviceName},"${appt.date}","${appt.time}",${serviceDuration},${servicePrice},"${appt.status}",${notes}`);
+                }
+
+                const csvString = csvRows.join('\n');
+                const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = 'appointments.csv';
+                link.click();
+                URL.revokeObjectURL(link.href);
+
+            } catch (error) {
+                console.error('Error exporting CSV:', error);
+                alert('Failed to export appointments as CSV.');
+            }
+        }
+
+        async function exportAppointmentsIcs() {
+             try {
+                const appointments = await getAllObjects('appointments');
+                 if (appointments.length === 0) {
+                    alert('No appointments to export.');
+                    return;
+                }
+
+                let icsString = `BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Yasin Ullah Pakistani//AppointMe Solo//EN\n`;
+
+                for (const appt of appointments) {
+                     const client = await getObject('clients', appt.clientId);
+                     const service = await getObject('services', appt.serviceId);
+
+                     const clientName = client ? client.name : 'Unknown Client';
+                     const serviceName = service ? service.name : 'Unknown Service';
+                     const serviceDuration = service ? service.duration : 60; // Default to 60 mins if unknown
+
+                     const startDateTime = new Date(`${appt.date}T${appt.time}`);
+                     const endDateTime = new Date(startDateTime.getTime() + serviceDuration * 60 * 1000);
+
+                     const formatDateTime = (date) => {
+                         return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+                     };
+
+                     const summary = `${serviceName} with ${clientName}`;
+                     const description = `Client Contact: ${client ? client.contact : 'N/A'}\nNotes: ${appt.notes || 'None'}\nStatus: ${appt.status}`;
+                     const uid = `appt-${appt.id}@appointmesolo.local`; // Simple unique ID
+
+                     icsString += `BEGIN:VEVENT\n`;
+                     icsString += `UID:${uid}\n`;
+                     icsString += `DTSTAMP:${formatDateTime(new Date())}\n`; // Timestamp of when the event was created (now)
+                     icsString += `DTSTART:${formatDateTime(startDateTime)}\n`;
+                     icsString += `DTEND:${formatDateTime(endDateTime)}\n`;
+                     icsString += `SUMMARY:${summary}\n`;
+                     icsString += `DESCRIPTION:${description}\n`;
+                     icsString += `END:VEVENT\n`;
+                }
+
+                icsString += `END:VCALENDAR\n`;
+
+                const blob = new Blob([icsString], { type: 'text/calendar;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = 'appointments.ics';
+                link.click();
+                URL.revokeObjectURL(link.href);
+
+            } catch (error) {
+                console.error('Error exporting ICS:', error);
+                alert('Failed to export appointments as ICS.');
+            }
+        }
+
+
+        exportCsvBtn.addEventListener('click', exportAppointmentsCsv);
+        exportIcsBtn.addEventListener('click', exportAppointmentsIcs);
+
+
+        // Initial Load
+        openDatabase().then(() => {
+            showSection('calendar'); // Default view
+        }).catch(error => {
+            console.error('Failed to open database:', error);
+            alert('Failed to initialize the application database.');
+        });
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,2375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AppointMe Solo</title>
+    <meta name="description" content="Client-side appointment book for a single service provider.">
+    <meta name_author content="Yasin Ullah Pakistani">
+    <style>
+        /* CSS Reset and Base Styles */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --font-family-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            --font-family-monospace: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+
+            /* Light Theme (Default) */
+            --bg-color: #f4f7f9;
+            --text-color: #2c3e50;
+            --primary-color: #3498db;
+            --primary-hover-color: #2980b9;
+            --secondary-color: #95a5a6;
+            --accent-color: #e74c3c;
+            --border-color: #dfe6e9;
+            --card-bg: #ffffff;
+            --modal-overlay-bg: rgba(0, 0, 0, 0.6);
+            --input-bg: #ffffff;
+            --input-border: #bdc3c7;
+            --disabled-bg: #ecf0f1;
+            --disabled-text: #95a5a6;
+            --success-color: #2ecc71;
+            --warning-color: #f1c40f;
+            --error-color: #e74c3c;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+
+            --futuristic-glow: 0 0 5px var(--primary-color), 0 0 10px var(--primary-color), 0 0 15px var(--primary-color);
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #1a1d24; /* Darker, slightly bluish */
+            --text-color: #e0e7ef; /* Lighter text */
+            --primary-color: #00aeff; /* Brighter blue for dark mode */
+            --primary-hover-color: #0095dd;
+            --secondary-color: #7f8c8d;
+            --accent-color: #ff6b6b; /* Brighter red */
+            --border-color: #343a40; /* Darker borders */
+            --card-bg: #232730; /* Darker card background */
+            --modal-overlay-bg: rgba(0, 0, 0, 0.8);
+            --input-bg: #2c313a;
+            --input-border: #4a515c;
+            --disabled-bg: #2c313a;
+            --disabled-text: #5a616c;
+            --shadow-color: rgba(0, 0, 0, 0.3);
+
+            --futuristic-glow: 0 0 8px var(--primary-color), 0 0 16px var(--primary-color), 0 0 24px var(--primary-color);
+        }
+
+        html {
+            font-size: 16px; /* Base font size */
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: var(--font-family-sans);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* Accessibility */
+        :focus-visible {
+            outline: 2px solid var(--primary-color);
+            outline-offset: 2px;
+            box-shadow: 0 0 0 4px var(--bg-color), 0 0 0 6px var(--primary-color);
+        }
+        .sr-only { /* Screen reader only */
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        /* Layout */
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+
+        header {
+            background-color: var(--card-bg);
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: 0 2px 4px var(--shadow-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        header h1 {
+            font-size: 1.75rem;
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        nav {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        main {
+            flex-grow: 1;
+            padding: 1.5rem;
+            overflow-x: hidden; /* Prevent horizontal scroll from animations/transitions */
+        }
+
+        footer {
+            text-align: center;
+            padding: 1rem;
+            font-size: 0.875rem;
+            color: var(--secondary-color);
+            border-top: 1px solid var(--border-color);
+            background-color: var(--card-bg);
+        }
+
+        /* Components */
+        .button, button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.65rem 1.25rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: background-color 0.2s ease-in-out, transform 0.1s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        .button:hover, button:hover {
+            background-color: var(--primary-hover-color);
+            transform: translateY(-1px);
+        }
+        .button:active, button:active {
+            transform: translateY(0px);
+        }
+        .button.secondary {
+            background-color: var(--secondary-color);
+        }
+        .button.secondary:hover {
+            background-color: #7f8c8d;
+        }
+        .button.danger {
+            background-color: var(--accent-color);
+        }
+        .button.danger:hover {
+            background-color: #c0392b;
+        }
+        .button.small {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
+        }
+        button:disabled, .button:disabled {
+            background-color: var(--disabled-bg);
+            color: var(--disabled-text);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .view {
+            display: none;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        .view.active-view {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 12px var(--shadow-color);
+            border: 1px solid var(--border-color);
+        }
+        .card h2 {
+            margin-top: 0;
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+            color: var(--primary-color);
+        }
+        .card h3 {
+            margin-top: 0;
+            margin-bottom: 0.75rem;
+            font-size: 1.25rem;
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        .form-group input[type="text"],
+        .form-group input[type="email"],
+        .form-group input[type="tel"],
+        .form-group input[type="number"],
+        .form-group input[type="time"],
+        .form-group input[type="date"],
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--input-border);
+            border-radius: 6px;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            font-size: 1rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(var(--primary-color-rgb, 52, 152, 219), 0.25); /* Fallback for primary-color-rgb */
+        }
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        .form-group input[type="checkbox"] {
+            margin-right: 0.5rem;
+            vertical-align: middle;
+        }
+
+        /* Theme Switcher */
+        .theme-switcher {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .theme-switcher label {
+            font-size: 0.9rem;
+        }
+        #themeToggle { /* Basic toggle switch styling */
+            appearance: none;
+            width: 40px;
+            height: 20px;
+            background-color: var(--secondary-color);
+            border-radius: 10px;
+            position: relative;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        #themeToggle::before {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background-color: white;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.3s;
+        }
+        #themeToggle:checked {
+            background-color: var(--primary-color);
+        }
+        #themeToggle:checked::before {
+            transform: translateX(20px);
+        }
+
+
+        /* Modal Styles */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: var(--modal-overlay-bg);
+            animation: fadeInModalBg 0.3s;
+        }
+        .modal-content {
+            background-color: var(--card-bg);
+            margin: 10% auto;
+            padding: 2rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            animation: slideInModal 0.3s ease-out;
+            position: relative;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1rem;
+            margin-bottom: 1rem;
+        }
+        .modal-header h2 {
+            margin: 0;
+            font-size: 1.5rem;
+            color: var(--primary-color);
+        }
+        .close-button {
+            color: var(--secondary-color);
+            font-size: 2rem;
+            font-weight: bold;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0 0.5rem;
+        }
+        .close-button:hover, .close-button:focus {
+            color: var(--text-color);
+        }
+        @keyframes fadeInModalBg { from { background-color: rgba(0,0,0,0); } to { background-color: var(--modal-overlay-bg); } }
+        @keyframes slideInModal { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        /* Table Styles */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1rem;
+        }
+        th, td {
+            text-align: left;
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        th {
+            background-color: var(--input-bg); /* Slightly different from card-bg for header */
+            font-weight: 600;
+        }
+        tbody tr:hover {
+            background-color: var(--disabled-bg);
+        }
+
+        /* Calendar Styles - "Futuristic" leaning towards clean and modern */
+        .calendar-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .calendar-controls h2 {
+            margin: 0;
+            font-size: 1.75rem;
+            color: var(--primary-color);
+            text-shadow: var(--futuristic-glow-text, none); /* Glow for text if desired */
+        }
+        .calendar-view-mode {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .calendar-grid {
+            display: grid;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden; /* For rounded corners on children */
+            background-color: var(--card-bg);
+            box-shadow: 0 4px 12px var(--shadow-color);
+        }
+
+        /* Monthly Calendar */
+        .month-grid {
+            grid-template-columns: repeat(7, 1fr);
+        }
+        .calendar-header-cell, .calendar-day-cell {
+            padding: 0.75rem;
+            text-align: center;
+            border-right: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
+        }
+        .calendar-header-cell {
+            font-weight: 600;
+            background-color: var(--input-bg);
+        }
+        .calendar-day-cell {
+            min-height: 100px;
+            position: relative;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .calendar-day-cell:hover {
+            background-color: var(--disabled-bg);
+        }
+        .calendar-day-cell.other-month {
+            color: var(--secondary-color);
+            background-color: var(--input-bg); /* Slightly different for non-current month days */
+            cursor: default;
+        }
+        .calendar-day-cell.today {
+            background-color: var(--primary-color-light, #aedcfc); /* A light version of primary */
+            font-weight: bold;
+        }
+        [data-theme="dark"] .calendar-day-cell.today {
+            background-color: var(--primary-hover-color);
+        }
+        .day-number {
+            font-size: 0.9rem;
+            position: absolute;
+            top: 5px;
+            right: 5px;
+        }
+        .day-appointments-summary {
+            font-size: 0.75rem;
+            margin-top: 1.5rem;
+            text-align: left;
+        }
+        .day-appointments-summary .appointment-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            margin-right: 4px;
+        }
+
+        /* Daily/Weekly View - Timeline Style */
+        .timeline-view {
+            display: flex;
+            flex-direction: column;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background-color: var(--card-bg);
+            box-shadow: 0 4px 12px var(--shadow-color);
+            max-height: 70vh; /* Limit height and make scrollable */
+            overflow-y: auto;
+        }
+        .timeline-header {
+            display: flex;
+            position: sticky;
+            top: 0;
+            background-color: var(--input-bg);
+            z-index: 10;
+        }
+        .timeline-header .time-column-header {
+            width: 80px; /* Width for time labels */
+            padding: 0.75rem;
+            text-align: center;
+            font-weight: 600;
+            border-right: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
+        }
+        .timeline-header .day-column-header {
+            flex: 1;
+            padding: 0.75rem;
+            text-align: center;
+            font-weight: 600;
+            border-right: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
+        }
+        .timeline-header .day-column-header:last-child {
+            border-right: none;
+        }
+        .timeline-body {
+            display: flex;
+            flex-grow: 1;
+        }
+        .time-slots-column {
+            width: 80px;
+            border-right: 1px solid var(--border-color);
+        }
+        .time-slot-label {
+            height: 50px; /* Corresponds to 30-min slot height */
+            padding: 0.5rem;
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--secondary-color);
+            border-bottom: 1px dashed var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .day-column {
+            flex: 1;
+            position: relative; /* For positioning appointments */
+            border-right: 1px solid var(--border-color);
+        }
+        .day-column:last-child {
+            border-right: none;
+        }
+        .slot {
+            height: 50px; /* 30-minute slot height */
+            border-bottom: 1px dashed var(--border-color);
+            cursor: pointer;
+            transition: background-color 0.2s;
+            position: relative; /* For potential future indicators */
+        }
+        .slot:hover {
+            background-color: var(--disabled-bg);
+        }
+        .slot.unavailable {
+            background-color: repeating-linear-gradient(
+                45deg,
+                var(--input-bg),
+                var(--input-bg) 10px,
+                var(--disabled-bg) 10px,
+                var(--disabled-bg) 20px
+            );
+            cursor: not-allowed;
+        }
+        .appointment-block {
+            position: absolute;
+            left: 2px;
+            right: 2px;
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 4px;
+            padding: 0.3rem 0.5rem;
+            font-size: 0.8rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            box-shadow: 0 2px 4px var(--shadow-color);
+            border: 1px solid var(--primary-hover-color);
+            z-index: 5; /* Above slots */
+            cursor: pointer;
+        }
+        .appointment-block.confirmed { background-color: var(--primary-color); }
+        .appointment-block.completed { background-color: var(--success-color); }
+        .appointment-block.cancelled { background-color: var(--accent-color); text-decoration: line-through; }
+
+        /* Status indicators */
+        .status-badge {
+            padding: 0.2em 0.6em;
+            border-radius: 0.25rem;
+            font-size: 0.8em;
+            font-weight: bold;
+            text-transform: capitalize;
+        }
+        .status-booked { background-color: var(--primary-color); color: white; }
+        .status-confirmed { background-color: var(--primary-color); color: white; } /* Same as booked for now */
+        .status-completed { background-color: var(--success-color); color: white; }
+        .status-cancelled { background-color: var(--accent-color); color: white; }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            nav {
+                width: 100%;
+                justify-content: space-around; /* Better for mobile nav buttons */
+            }
+            nav button {
+                flex-grow: 1; /* Make buttons take up space */
+            }
+            .calendar-controls {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .calendar-controls h2 {
+                font-size: 1.5rem;
+            }
+            .calendar-view-mode {
+                width: 100%;
+                justify-content: space-around;
+            }
+            .calendar-day-cell {
+                min-height: 70px;
+                font-size: 0.8rem;
+            }
+            .day-number {
+                font-size: 0.8rem;
+            }
+            .modal-content {
+                margin: 5% auto;
+                width: 95%;
+            }
+            .timeline-header .time-column-header, .time-slots-column {
+                width: 60px; /* Smaller time column */
+            }
+            .time-slot-label {
+                font-size: 0.7rem;
+            }
+            .appointment-block {
+                font-size: 0.7rem;
+                padding: 0.2rem 0.3rem;
+            }
+        }
+        @media (max-width: 480px) {
+            header h1 { font-size: 1.5rem; }
+            main { padding: 1rem; }
+            .button { padding: 0.5rem 1rem; font-size: 0.9rem; }
+            .card { padding: 1rem; }
+            .card h2 { font-size: 1.3rem; }
+            .form-group input, .form-group select, .form-group textarea { padding: 0.6rem; }
+            .calendar-header-cell, .calendar-day-cell { padding: 0.5rem; }
+            .day-appointments-summary { display: none; } /* Hide summary on very small screens, dots are enough */
+        }
+
+        /* Utility classes */
+        .text-center { text-align: center; }
+        .mt-1 { margin-top: 1rem; }
+        .mb-1 { margin-bottom: 1rem; }
+        .hidden { display: none !important; }
+        .actions-cell {
+            white-space: nowrap; /* Prevent buttons from wrapping */
+        }
+        .actions-cell button {
+            margin-right: 0.5rem;
+        }
+        .actions-cell button:last-child {
+            margin-right: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <h1>AppointMe Solo</h1>
+            <nav id="main-nav">
+                <button data-view="calendar" class="nav-button active" aria-current="page">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z"/></svg>
+                    Calendar
+                </button>
+                <button data-view="services" class="nav-button">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true"><path d="M8.5 4.5a.5.5 0 0 0-1 0v3h-3a.5.5 0 0 0 0 1h3v3a.5.5 0 0 0 1 0v-3h3a.5.5 0 0 0 0-1h-3v-3z"/><path d="M14.5 1.5a.5.5 0 0 1 .5.5v4.8a2.5 2.5 0 0 1-2.5 2.5H2.5A2.5 2.5 0 0 1 0 6.8V2a.5.5 0 0 1 .5-.5h14zM1 2v4.8a1.5 1.5 0 0 0 1.5 1.5h11A1.5 1.5 0 0 0 15 6.8V2H1z"/></svg>
+                    Services
+                </button>
+                <button data-view="clients" class="nav-button">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true"><path d="M15 14s1 0 1-1-1-4-6-4-6 3-6 4 1 1 1 1h10zm-9.995-.944v-.002.002zM3.022 13h9.956a.274.274 0 0 0 .014-.002l.008-.002c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664a1.05 1.05 0 0 0 .022.004zm9.974.056v-.002.002zM8 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm3-2a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/></svg>
+                    Clients
+                </button>
+                <button data-view="settings" class="nav-button">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true"><path d="M9.405 1.05c-.413-1.4-2.397-1.4-2.81 0l-.1.34a1.464 1.464 0 0 1-2.105.872l-.31-.17c-1.283-.698-2.686.705-1.987 1.987l.169.311a1.464 1.464 0 0 1-.872 2.105l-.34.1c-1.4.413-1.4 2.397 0 2.81l.34.1a1.464 1.464 0 0 1 .872 2.105l-.17.31c-.698 1.283.705 2.686 1.987 1.987l.311-.169a1.464 1.464 0 0 1 2.105.872l.1.34c.413 1.4 2.397 1.4 2.81 0l.1-.34a1.464 1.464 0 0 1 2.105-.872l.31.17c1.283.698 2.686-.705 1.987-1.987l-.169-.311a1.464 1.464 0 0 1 .872-2.105l.34-.1c1.4-.413-1.4-2.397 0-2.81l-.34-.1a1.464 1.464 0 0 1-.872-2.105l.17-.31c.698-1.283-.705-2.686-1.987-1.987l-.311.169a1.464 1.464 0 0 1-2.105-.872l-.1-.34zM8 10.93a2.929 2.929 0 1 1 0-5.86 2.929 2.929 0 0 1 0 5.858z"/></svg>
+                    Settings
+                </button>
+            </nav>
+            <div class="theme-switcher">
+                <label for="themeToggle" class="sr-only">Toggle Dark Mode</label>
+                <input type="checkbox" id="themeToggle" title="Toggle Dark Mode">
+                <span aria-hidden="true">🌙/☀️</span>
+            </div>
+        </header>
+
+        <main>
+            <!-- Calendar View -->
+            <section id="calendar-view" class="view active-view">
+                <div class="calendar-controls">
+                    <div id="calendar-navigation">
+                        <button id="prev-month-btn" aria-label="Previous Period">&lt;</button>
+                        <h2 id="current-month-year">Month Year</h2>
+                        <button id="next-month-btn" aria-label="Next Period">&gt;</button>
+                    </div>
+                    <div class="calendar-view-mode">
+                        <button id="view-month-btn" class="button small active" data-viewmode="month">Month</button>
+                        <button id="view-week-btn" class="button small" data-viewmode="week">Week</button>
+                        <button id="view-day-btn" class="button small" data-viewmode="day">Day</button>
+                    </div>
+                </div>
+                <div id="calendar-container">
+                    <!-- Monthly Grid -->
+                    <div id="month-grid-container" class="calendar-grid month-grid">
+                        <!-- Headers: Sun, Mon, ..., Sat -->
+                        <!-- Day cells will be generated by JS -->
+                    </div>
+                    <!-- Daily/Weekly Timeline -->
+                    <div id="timeline-view-container" class="timeline-view hidden">
+                        <div class="timeline-header">
+                            <div class="time-column-header">Time</div>
+                            <div id="timeline-day-headers" class="day-headers-container" style="display:flex; flex:1;">
+                                <!-- Day headers generated by JS -->
+                            </div>
+                        </div>
+                        <div class="timeline-body">
+                            <div id="timeline-time-slots" class="time-slots-column">
+                                <!-- Time slot labels generated by JS -->
+                            </div>
+                            <div id="timeline-day-columns" class="day-columns-container" style="display:flex; flex:1;">
+                                <!-- Day columns with slots generated by JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Services View -->
+            <section id="services-view" class="view">
+                <div class="card">
+                    <h2>Manage Services</h2>
+                    <button id="add-service-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/></svg>
+                        Add New Service
+                    </button>
+                    <table id="services-table" class="mt-1" aria-labelledby="services-view-heading">
+                        <caption id="services-view-heading" class="sr-only">List of services</caption>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Duration (min)</th>
+                                <th>Price</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Service rows will be generated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Clients View -->
+            <section id="clients-view" class="view">
+                <div class="card">
+                    <h2>Manage Clients</h2>
+                    <button id="add-client-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/></svg>
+                        Add New Client
+                    </button>
+                    <table id="clients-table" class="mt-1" aria-labelledby="clients-view-heading">
+                        <caption id="clients-view-heading" class="sr-only">List of clients</caption>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Contact</th>
+                                <th>Notes</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Client rows will be generated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+                <div id="client-history-card" class="card hidden">
+                    <h3 id="client-history-name">Client Appointment History</h3>
+                    <table id="client-history-table" aria-labelledby="client-history-name">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Time</th>
+                                <th>Service</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- History rows will be generated by JS -->
+                        </tbody>
+                    </table>
+                    <button id="back-to-clients-list" class="button secondary">Back to Client List</button>
+                </div>
+            </section>
+
+            <!-- Settings View -->
+            <section id="settings-view" class="view">
+                <div class="card">
+                    <h2>Settings</h2>
+                    
+                    <div class="form-group">
+                        <h3>Recurring Availability</h3>
+                        <p>Define your standard working hours. Appointments can only be booked within these times.</p>
+                        <div id="availability-rules-container">
+                            <!-- Availability rules UI generated by JS -->
+                        </div>
+                        <button id="add-availability-rule-btn" class="button small mt-1">Add Availability Rule</button>
+                    </div>
+                    <hr class="mb-1 mt-1">
+                    <div class="form-group">
+                        <h3>Data Export</h3>
+                        <p>Export your appointment data.</p>
+                        <button id="export-csv-btn" class="button secondary">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/></svg>
+                            Export to CSV
+                        </button>
+                        <button id="export-ics-btn" class="button secondary">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/></svg>
+                            Export to ICS
+                        </button>
+                    </div>
+                    <hr class="mb-1 mt-1">
+                    <div class="form-group">
+                        <h3>Reminders</h3>
+                        <button id="enable-notifications-btn">Enable Desktop Notifications</button>
+                        <p id="notification-status" class="mt-1"></p>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>&copy; <span id="current-year"></span> AppointMe Solo. Created by Yasin Ullah Pakistani.</p>
+        </footer>
+    </div>
+
+    <!-- Modals -->
+    <!-- Service Modal -->
+    <div id="service-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="service-modal-title">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="service-modal-title">Add/Edit Service</h2>
+                <button class="close-button" data-dismiss="modal" aria-label="Close">&times;</button>
+            </div>
+            <form id="service-form">
+                <input type="hidden" id="service-id">
+                <div class="form-group">
+                    <label for="service-name">Service Name</label>
+                    <input type="text" id="service-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="service-duration">Duration (minutes)</label>
+                    <input type="number" id="service-duration" required min="5" step="5">
+                </div>
+                <div class="form-group">
+                    <label for="service-price">Price</label>
+                    <input type="number" id="service-price" required min="0" step="0.01">
+                </div>
+                <button type="submit" class="button">Save Service</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Client Modal -->
+    <div id="client-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="client-modal-title">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="client-modal-title">Add/Edit Client</h2>
+                <button class="close-button" data-dismiss="modal" aria-label="Close">&times;</button>
+            </div>
+            <form id="client-form">
+                <input type="hidden" id="client-id">
+                <div class="form-group">
+                    <label for="client-name">Client Name</label>
+                    <input type="text" id="client-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="client-contact">Contact (Email/Phone)</label>
+                    <input type="text" id="client-contact">
+                </div>
+                <div class="form-group">
+                    <label for="client-notes">Notes</label>
+                    <textarea id="client-notes"></textarea>
+                </div>
+                <button type="submit" class="button">Save Client</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Appointment Modal -->
+    <div id="appointment-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="appointment-modal-title">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="appointment-modal-title">Book/Edit Appointment</h2>
+                <button class="close-button" data-dismiss="modal" aria-label="Close">&times;</button>
+            </div>
+            <form id="appointment-form">
+                <input type="hidden" id="appointment-id">
+                <div class="form-group">
+                    <label for="appointment-client">Client</label>
+                    <select id="appointment-client" required>
+                        <!-- Options populated by JS -->
+                    </select>
+                    <button type="button" id="appointment-add-new-client-btn" class="button small mt-1">Add New Client</button>
+                </div>
+                <div class="form-group">
+                    <label for="appointment-service">Service</label>
+                    <select id="appointment-service" required>
+                        <!-- Options populated by JS -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="appointment-date">Date</label>
+                    <input type="date" id="appointment-date" required>
+                </div>
+                <div class="form-group">
+                    <label for="appointment-time">Time</label>
+                    <input type="time" id="appointment-time" required>
+                </div>
+                <div class="form-group">
+                    <label for="appointment-status">Status</label>
+                    <select id="appointment-status" required>
+                        <option value="booked">Booked</option>
+                        <option value="confirmed">Confirmed</option>
+                        <option value="completed">Completed</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="appointment-notes">Notes</label>
+                    <textarea id="appointment-notes"></textarea>
+                </div>
+                <button type="submit" class="button">Save Appointment</button>
+                <button type="button" id="delete-appointment-btn" class="button danger hidden">Delete Appointment</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Availability Rule Modal (Simplified, inline for now) -->
+    <!-- This is handled directly in the settings page for simplicity in a single file -->
+
+    <script>
+    // AppointMe Solo - JavaScript
+    // Author: Yasin Ullah Pakistani
+    (function() {
+        'use strict';
+
+        // --- CONFIGURATION ---
+        const DB_NAME = 'AppointMeSoloDB';
+        const DB_VERSION = 1;
+        const STORES = {
+            SERVICES: 'services',
+            CLIENTS: 'clients',
+            APPOINTMENTS: 'appointments',
+            AVAILABILITY: 'availabilityRules',
+            SETTINGS: 'appSettings'
+        };
+        const DEFAULT_SLOT_DURATION = 30; // minutes, for timeline display
+        const REMINDER_LEAD_TIME = 30 * 60 * 1000; // 30 minutes in milliseconds
+
+        // --- STATE ---
+        let db;
+        let currentView = 'calendar';
+        let currentCalendarDate = new Date();
+        let currentCalendarViewMode = 'month'; // 'month', 'week', 'day'
+        let servicesCache = [];
+        let clientsCache = [];
+        let appointmentsCache = [];
+        let availabilityRulesCache = [];
+        let editingServiceId = null;
+        let editingClientId = null;
+        let editingAppointmentId = null;
+
+        // --- DOM ELEMENTS ---
+        const mainNav = document.getElementById('main-nav');
+        const views = document.querySelectorAll('.view');
+        const themeToggle = document.getElementById('themeToggle');
+
+        // Calendar elements
+        const calendarContainer = document.getElementById('calendar-container');
+        const monthGridContainer = document.getElementById('month-grid-container');
+        const timelineViewContainer = document.getElementById('timeline-view-container');
+        const timelineDayHeaders = document.getElementById('timeline-day-headers');
+        const timelineTimeSlots = document.getElementById('timeline-time-slots');
+        const timelineDayColumns = document.getElementById('timeline-day-columns');
+        const currentMonthYearEl = document.getElementById('current-month-year');
+        const prevMonthBtn = document.getElementById('prev-month-btn');
+        const nextMonthBtn = document.getElementById('next-month-btn');
+        const viewMonthBtn = document.getElementById('view-month-btn');
+        const viewWeekBtn = document.getElementById('view-week-btn');
+        const viewDayBtn = document.getElementById('view-day-btn');
+
+        // Service elements
+        const addServiceBtn = document.getElementById('add-service-btn');
+        const servicesTableBody = document.querySelector('#services-table tbody');
+        const serviceModal = document.getElementById('service-modal');
+        const serviceForm = document.getElementById('service-form');
+        const serviceIdInput = document.getElementById('service-id');
+        const serviceNameInput = document.getElementById('service-name');
+        const serviceDurationInput = document.getElementById('service-duration');
+        const servicePriceInput = document.getElementById('service-price');
+
+        // Client elements
+        const addClientBtn = document.getElementById('add-client-btn');
+        const clientsTableBody = document.querySelector('#clients-table tbody');
+        const clientModal = document.getElementById('client-modal');
+        const clientForm = document.getElementById('client-form');
+        const clientIdInput = document.getElementById('client-id');
+        const clientNameInput = document.getElementById('client-name');
+        const clientContactInput = document.getElementById('client-contact');
+        const clientNotesInput = document.getElementById('client-notes');
+        const clientHistoryCard = document.getElementById('client-history-card');
+        const clientHistoryNameEl = document.getElementById('client-history-name');
+        const clientHistoryTableBody = document.querySelector('#client-history-table tbody');
+        const backToClientsListBtn = document.getElementById('back-to-clients-list');
+
+        // Appointment elements
+        const appointmentModal = document.getElementById('appointment-modal');
+        const appointmentForm = document.getElementById('appointment-form');
+        const appointmentIdInput = document.getElementById('appointment-id');
+        const appointmentClientSelect = document.getElementById('appointment-client');
+        const appointmentServiceSelect = document.getElementById('appointment-service');
+        const appointmentDateInput = document.getElementById('appointment-date');
+        const appointmentTimeInput = document.getElementById('appointment-time');
+        const appointmentStatusSelect = document.getElementById('appointment-status');
+        const appointmentNotesInput = document.getElementById('appointment-notes');
+        const deleteAppointmentBtn = document.getElementById('delete-appointment-btn');
+        const appointmentAddNewClientBtn = document.getElementById('appointment-add-new-client-btn');
+
+        // Settings elements
+        const availabilityRulesContainer = document.getElementById('availability-rules-container');
+        const addAvailabilityRuleBtn = document.getElementById('add-availability-rule-btn');
+        const exportCsvBtn = document.getElementById('export-csv-btn');
+        const exportIcsBtn = document.getElementById('export-ics-btn');
+        const enableNotificationsBtn = document.getElementById('enable-notifications-btn');
+        const notificationStatusEl = document.getElementById('notification-status');
+
+        // --- INITIALIZATION ---
+        document.addEventListener('DOMContentLoaded', async () => {
+            document.getElementById('current-year').textContent = new Date().getFullYear();
+            initTheme();
+            await initDB();
+            await loadInitialData();
+            setupEventListeners();
+            navigateTo(currentView); // Initial view
+            renderCalendar();
+            renderServicesList();
+            renderClientsList();
+            renderAvailabilityRules();
+            checkReminders(); // Initial check
+            setInterval(checkReminders, 5 * 60 * 1000); // Check every 5 minutes
+        });
+
+        // --- THEME ---
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            themeToggle.checked = savedTheme === 'dark';
+            // Set :root --primary-color-rgb for box-shadow alpha
+            updatePrimaryColorRGB(); 
+        }
+
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            themeToggle.checked = newTheme === 'dark';
+            updatePrimaryColorRGB();
+        }
+        
+        function updatePrimaryColorRGB() {
+            const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary-color').trim();
+            // Basic parsing for hex or rgb string - this is simplified
+            let rgb = [52, 152, 219]; // Default to light theme primary
+            if (primaryColor.startsWith('#')) {
+                const hex = primaryColor.substring(1);
+                if (hex.length === 3) {
+                    rgb = [parseInt(hex[0]+hex[0], 16), parseInt(hex[1]+hex[1], 16), parseInt(hex[2]+hex[2], 16)];
+                } else if (hex.length === 6) {
+                    rgb = [parseInt(hex.substring(0,2), 16), parseInt(hex.substring(2,4), 16), parseInt(hex.substring(4,6), 16)];
+                }
+            } else if (primaryColor.startsWith('rgb')) {
+                const parts = primaryColor.match(/\d+/g);
+                if (parts && parts.length >= 3) {
+                    rgb = parts.slice(0,3).map(Number);
+                }
+            }
+            document.documentElement.style.setProperty('--primary-color-rgb', rgb.join(', '));
+        }
+
+
+        // --- DATABASE ---
+        function initDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                request.onerror = (event) => {
+                    console.error('IndexedDB error:', event.target.error);
+                    reject('Error opening database');
+                    alert('Error initializing database. AppointMe Solo may not work correctly.');
+                };
+                request.onsuccess = (event) => {
+                    db = event.target.result;
+                    console.log('Database opened successfully');
+                    resolve(db);
+                };
+                request.onupgradeneeded = (event) => {
+                    db = event.target.result;
+                    if (!db.objectStoreNames.contains(STORES.SERVICES)) {
+                        db.createObjectStore(STORES.SERVICES, { keyPath: 'id', autoIncrement: true });
+                    }
+                    if (!db.objectStoreNames.contains(STORES.CLIENTS)) {
+                        db.createObjectStore(STORES.CLIENTS, { keyPath: 'id', autoIncrement: true });
+                    }
+                    if (!db.objectStoreNames.contains(STORES.APPOINTMENTS)) {
+                        const appointmentsStore = db.createObjectStore(STORES.APPOINTMENTS, { keyPath: 'id', autoIncrement: true });
+                        appointmentsStore.createIndex('dateTime', 'dateTime', { unique: false });
+                        appointmentsStore.createIndex('clientId', 'clientId', { unique: false });
+                        appointmentsStore.createIndex('serviceId', 'serviceId', { unique: false });
+                        appointmentsStore.createIndex('status', 'status', { unique: false });
+                    }
+                    if (!db.objectStoreNames.contains(STORES.AVAILABILITY)) {
+                        db.createObjectStore(STORES.AVAILABILITY, { keyPath: 'id', autoIncrement: true })
+                          .createIndex('dayOfWeek', 'dayOfWeek', { unique: false });
+                    }
+                    if (!db.objectStoreNames.contains(STORES.SETTINGS)) {
+                        db.createObjectStore(STORES.SETTINGS, { keyPath: 'key' });
+                    }
+                    console.log('Database upgrade complete');
+                };
+            });
+        }
+
+        function crud(storeName, operation, data, key) {
+            return new Promise((resolve, reject) => {
+                if (!db) {
+                    console.error("Database not initialized.");
+                    return reject("Database not initialized.");
+                }
+                const transaction = db.transaction([storeName], operation === 'get' || operation === 'getAll' ? 'readonly' : 'readwrite');
+                const store = transaction.objectStore(storeName);
+                let request;
+
+                switch (operation) {
+                    case 'add': request = store.add(data); break;
+                    case 'put': request = store.put(data); break;
+                    case 'delete': request = store.delete(key); break;
+                    case 'get': request = store.get(key); break;
+                    case 'getAll': request = store.getAll(); break;
+                    default: return reject('Invalid operation');
+                }
+
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = (event) => {
+                    console.error(`Error in ${operation} on ${storeName}:`, event.target.error);
+                    reject(event.target.error);
+                };
+            });
+        }
+        
+        function getDataByIndex(storeName, indexName, value) {
+            return new Promise((resolve, reject) => {
+                if (!db) return reject("Database not initialized.");
+                const transaction = db.transaction([storeName], 'readonly');
+                const store = transaction.objectStore(storeName);
+                const index = store.index(indexName);
+                const request = index.getAll(value);
+
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = (event) => {
+                    console.error(`Error getting data by index ${indexName} on ${storeName}:`, event.target.error);
+                    reject(event.target.error);
+                };
+            });
+        }
+
+
+        async function loadInitialData() {
+            try {
+                servicesCache = await crud(STORES.SERVICES, 'getAll') || [];
+                clientsCache = await crud(STORES.CLIENTS, 'getAll') || [];
+                appointmentsCache = await crud(STORES.APPOINTMENTS, 'getAll') || [];
+                availabilityRulesCache = await crud(STORES.AVAILABILITY, 'getAll') || [];
+                // Load settings if any, e.g., default view, etc.
+            } catch (error) {
+                console.error("Error loading initial data:", error);
+                alert("Could not load data. Please try refreshing the page.");
+            }
+        }
+
+        // --- NAVIGATION ---
+        function navigateTo(viewId) {
+            views.forEach(view => view.classList.remove('active-view'));
+            document.getElementById(`${viewId}-view`).classList.add('active-view');
+            
+            mainNav.querySelectorAll('.nav-button').forEach(btn => {
+                btn.classList.remove('active');
+                btn.removeAttribute('aria-current');
+            });
+            const activeBtn = mainNav.querySelector(`button[data-view="${viewId}"]`);
+            if (activeBtn) {
+                activeBtn.classList.add('active');
+                activeBtn.setAttribute('aria-current', 'page');
+            }
+            currentView = viewId;
+
+            // Specific actions when navigating to a view
+            if (viewId === 'calendar') {
+                renderCalendar();
+            } else if (viewId === 'clients') {
+                document.getElementById('clients-table').parentElement.classList.remove('hidden');
+                clientHistoryCard.classList.add('hidden');
+            }
+        }
+
+        // --- EVENT LISTENERS ---
+        function setupEventListeners() {
+            themeToggle.addEventListener('change', toggleTheme);
+
+            mainNav.addEventListener('click', (e) => {
+                if (e.target.closest('button[data-view]')) {
+                    navigateTo(e.target.closest('button[data-view]').dataset.view);
+                }
+            });
+
+            // Modals close buttons
+            document.querySelectorAll('[data-dismiss="modal"]').forEach(btn => {
+                btn.addEventListener('click', () => closeModal(btn.closest('.modal').id));
+            });
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) closeModal(modal.id); // Close if backdrop is clicked
+                });
+            });
+            
+            // Calendar Navigation
+            prevMonthBtn.addEventListener('click', () => navigateCalendarPeriod(-1));
+            nextMonthBtn.addEventListener('click', () => navigateCalendarPeriod(1));
+            viewMonthBtn.addEventListener('click', () => setCalendarViewMode('month'));
+            viewWeekBtn.addEventListener('click', () => setCalendarViewMode('week'));
+            viewDayBtn.addEventListener('click', () => setCalendarViewMode('day'));
+
+            // Service Listeners
+            addServiceBtn.addEventListener('click', openServiceModal);
+            serviceForm.addEventListener('submit', handleServiceFormSubmit);
+            servicesTableBody.addEventListener('click', handleServicesTableActions);
+
+            // Client Listeners
+            addClientBtn.addEventListener('click', openClientModal);
+            clientForm.addEventListener('submit', handleClientFormSubmit);
+            clientsTableBody.addEventListener('click', handleClientsTableActions);
+            backToClientsListBtn.addEventListener('click', () => {
+                document.getElementById('clients-table').parentElement.classList.remove('hidden');
+                clientHistoryCard.classList.add('hidden');
+            });
+            appointmentAddNewClientBtn.addEventListener('click', () => {
+                closeModal('appointment-modal');
+                openClientModal(null, true); // true indicates coming from appointment modal
+            });
+
+
+            // Appointment Listeners
+            appointmentForm.addEventListener('submit', handleAppointmentFormSubmit);
+            deleteAppointmentBtn.addEventListener('click', handleDeleteAppointment);
+            // Event delegation for calendar slot clicks
+            calendarContainer.addEventListener('click', handleCalendarSlotClick);
+
+            // Settings Listeners
+            addAvailabilityRuleBtn.addEventListener('click', addAvailabilityRuleRow);
+            availabilityRulesContainer.addEventListener('click', handleAvailabilityRuleActions); // For save/delete on rules
+            exportCsvBtn.addEventListener('click', exportAppointmentsToCSV);
+            exportIcsBtn.addEventListener('click', exportAppointmentsToICS);
+            enableNotificationsBtn.addEventListener('click', requestNotificationPermission);
+        }
+
+        // --- MODAL MANAGEMENT ---
+        function openModal(modalId, focusElementId = null) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = 'block';
+                // Trap focus (basic implementation)
+                const focusableElements = modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+                if (focusableElements.length > 0) {
+                    const firstElement = focusableElements[0];
+                    const lastElement = focusableElements[focusableElements.length - 1];
+                    if (focusElementId) {
+                        document.getElementById(focusElementId)?.focus();
+                    } else {
+                        firstElement.focus();
+                    }
+                    
+                    modal.addEventListener('keydown', (e) => {
+                        if (e.key === 'Tab') {
+                            if (e.shiftKey) { // Shift + Tab
+                                if (document.activeElement === firstElement) {
+                                    lastElement.focus();
+                                    e.preventDefault();
+                                }
+                            } else { // Tab
+                                if (document.activeElement === lastElement) {
+                                    firstElement.focus();
+                                    e.preventDefault();
+                                }
+                            }
+                        } else if (e.key === 'Escape') {
+                            closeModal(modalId);
+                        }
+                    });
+                }
+            }
+        }
+
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = 'none';
+            }
+            // Reset forms if needed
+            if (modalId === 'service-modal') serviceForm.reset();
+            if (modalId === 'client-modal') clientForm.reset();
+            if (modalId === 'appointment-modal') {
+                appointmentForm.reset();
+                deleteAppointmentBtn.classList.add('hidden');
+                editingAppointmentId = null;
+            }
+        }
+
+        // --- SERVICE MANAGEMENT ---
+        function openServiceModal(service = null) {
+            serviceForm.reset();
+            if (service) {
+                editingServiceId = service.id;
+                serviceIdInput.value = service.id;
+                serviceNameInput.value = service.name;
+                serviceDurationInput.value = service.duration;
+                servicePriceInput.value = service.price;
+                document.getElementById('service-modal-title').textContent = 'Edit Service';
+            } else {
+                editingServiceId = null;
+                document.getElementById('service-modal-title').textContent = 'Add Service';
+            }
+            openModal('service-modal', 'service-name');
+        }
+
+        async function handleServiceFormSubmit(e) {
+            e.preventDefault();
+            const serviceData = {
+                name: serviceNameInput.value.trim(),
+                duration: parseInt(serviceDurationInput.value),
+                price: parseFloat(servicePriceInput.value)
+            };
+
+            if (!serviceData.name || isNaN(serviceData.duration) || isNaN(serviceData.price)) {
+                alert('Please fill all fields correctly.');
+                return;
+            }
+
+            try {
+                if (editingServiceId) {
+                    serviceData.id = editingServiceId;
+                    await crud(STORES.SERVICES, 'put', serviceData);
+                } else {
+                    await crud(STORES.SERVICES, 'add', serviceData);
+                }
+                servicesCache = await crud(STORES.SERVICES, 'getAll');
+                renderServicesList();
+                populateServiceDropdown(); // Update dropdown in appointment modal
+                closeModal('service-modal');
+            } catch (error) {
+                console.error('Error saving service:', error);
+                alert('Failed to save service.');
+            }
+        }
+
+        function renderServicesList() {
+            servicesTableBody.innerHTML = '';
+            if (servicesCache.length === 0) {
+                servicesTableBody.innerHTML = '<tr><td colspan="4" class="text-center">No services defined yet.</td></tr>';
+                return;
+            }
+            servicesCache.forEach(service => {
+                const row = servicesTableBody.insertRow();
+                row.innerHTML = `
+                    <td>${escapeHtml(service.name)}</td>
+                    <td>${service.duration}</td>
+                    <td>${formatCurrency(service.price)}</td>
+                    <td class="actions-cell">
+                        <button class="button small edit-service" data-id="${service.id}" aria-label="Edit ${escapeHtml(service.name)}">Edit</button>
+                        <button class="button small danger delete-service" data-id="${service.id}" aria-label="Delete ${escapeHtml(service.name)}">Delete</button>
+                    </td>
+                `;
+            });
+        }
+
+        async function handleServicesTableActions(e) {
+            const target = e.target;
+            if (target.classList.contains('edit-service')) {
+                const serviceId = parseInt(target.dataset.id);
+                const service = servicesCache.find(s => s.id === serviceId);
+                if (service) openServiceModal(service);
+            } else if (target.classList.contains('delete-service')) {
+                const serviceId = parseInt(target.dataset.id);
+                if (confirm('Are you sure you want to delete this service? This may affect existing appointments.')) {
+                    try {
+                        // Check if service is used in appointments
+                        const appointmentsUsingService = appointmentsCache.filter(app => app.serviceId === serviceId);
+                        if (appointmentsUsingService.length > 0) {
+                            if (!confirm(`This service is used in ${appointmentsUsingService.length} appointment(s). Deleting it will remove it from these appointments. Continue?`)) {
+                                return;
+                            }
+                            // Optionally, update appointments to remove serviceId or handle differently
+                        }
+                        await crud(STORES.SERVICES, 'delete', null, serviceId);
+                        servicesCache = await crud(STORES.SERVICES, 'getAll');
+                        renderServicesList();
+                        populateServiceDropdown();
+                        renderCalendar(); // Appointments might change
+                    } catch (error) {
+                        console.error('Error deleting service:', error);
+                        alert('Failed to delete service.');
+                    }
+                }
+            }
+        }
+
+        // --- CLIENT MANAGEMENT ---
+        function openClientModal(client = null, fromAppointmentModal = false) {
+            clientForm.reset();
+            if (client) {
+                editingClientId = client.id;
+                clientIdInput.value = client.id;
+                clientNameInput.value = client.name;
+                clientContactInput.value = client.contact || '';
+                clientNotesInput.value = client.notes || '';
+                document.getElementById('client-modal-title').textContent = 'Edit Client';
+            } else {
+                editingClientId = null;
+                document.getElementById('client-modal-title').textContent = 'Add Client';
+            }
+            clientModal.dataset.fromAppointment = fromAppointmentModal; // Store context
+            openModal('client-modal', 'client-name');
+        }
+
+        async function handleClientFormSubmit(e) {
+            e.preventDefault();
+            const clientData = {
+                name: clientNameInput.value.trim(),
+                contact: clientContactInput.value.trim(),
+                notes: clientNotesInput.value.trim()
+            };
+
+            if (!clientData.name) {
+                alert('Client name is required.');
+                return;
+            }
+
+            try {
+                let savedClient;
+                if (editingClientId) {
+                    clientData.id = editingClientId;
+                    savedClient = await crud(STORES.CLIENTS, 'put', clientData);
+                } else {
+                    savedClient = await crud(STORES.CLIENTS, 'add', clientData);
+                }
+                clientsCache = await crud(STORES.CLIENTS, 'getAll');
+                renderClientsList();
+                populateClientDropdown(); // Update dropdown in appointment modal
+                closeModal('client-modal');
+
+                // If opened from appointment modal, reopen it and select the new client
+                if (clientModal.dataset.fromAppointment === 'true') {
+                    openAppointmentModal(null, null, null, savedClient.id || clientData.id); // Pass new client ID
+                }
+
+            } catch (error) {
+                console.error('Error saving client:', error);
+                alert('Failed to save client.');
+            }
+        }
+
+        function renderClientsList() {
+            clientsTableBody.innerHTML = '';
+            if (clientsCache.length === 0) {
+                clientsTableBody.innerHTML = '<tr><td colspan="4" class="text-center">No clients added yet.</td></tr>';
+                return;
+            }
+            clientsCache.forEach(client => {
+                const row = clientsTableBody.insertRow();
+                row.innerHTML = `
+                    <td>${escapeHtml(client.name)}</td>
+                    <td>${escapeHtml(client.contact)}</td>
+                    <td>${escapeHtml(client.notes.substring(0,50))}${client.notes.length > 50 ? '...' : ''}</td>
+                    <td class="actions-cell">
+                        <button class="button small view-history" data-id="${client.id}" aria-label="View history for ${escapeHtml(client.name)}">History</button>
+                        <button class="button small edit-client" data-id="${client.id}" aria-label="Edit ${escapeHtml(client.name)}">Edit</button>
+                        <button class="button small danger delete-client" data-id="${client.id}" aria-label="Delete ${escapeHtml(client.name)}">Delete</button>
+                    </td>
+                `;
+            });
+        }
+
+        async function handleClientsTableActions(e) {
+            const target = e.target;
+            if (target.classList.contains('edit-client')) {
+                const clientId = parseInt(target.dataset.id);
+                const client = clientsCache.find(c => c.id === clientId);
+                if (client) openClientModal(client);
+            } else if (target.classList.contains('delete-client')) {
+                const clientId = parseInt(target.dataset.id);
+                if (confirm('Are you sure you want to delete this client? This will also delete all their appointments.')) {
+                    try {
+                        // Delete associated appointments
+                        const clientAppointments = appointmentsCache.filter(app => app.clientId === clientId);
+                        for (const app of clientAppointments) {
+                            await crud(STORES.APPOINTMENTS, 'delete', null, app.id);
+                        }
+                        
+                        await crud(STORES.CLIENTS, 'delete', null, clientId);
+                        
+                        clientsCache = await crud(STORES.CLIENTS, 'getAll');
+                        appointmentsCache = await crud(STORES.APPOINTMENTS, 'getAll'); // Refresh appointments
+                        
+                        renderClientsList();
+                        populateClientDropdown();
+                        renderCalendar(); // Appointments changed
+                    } catch (error) {
+                        console.error('Error deleting client and their appointments:', error);
+                        alert('Failed to delete client.');
+                    }
+                }
+            } else if (target.classList.contains('view-history')) {
+                const clientId = parseInt(target.dataset.id);
+                const client = clientsCache.find(c => c.id === clientId);
+                if (client) renderClientHistory(client);
+            }
+        }
+
+        async function renderClientHistory(client) {
+            document.getElementById('clients-table').parentElement.classList.add('hidden');
+            clientHistoryCard.classList.remove('hidden');
+            clientHistoryNameEl.textContent = `${escapeHtml(client.name)}'s Appointment History`;
+            
+            const clientAppointments = appointmentsCache
+                .filter(app => app.clientId === client.id)
+                .sort((a,b) => new Date(b.dateTime) - new Date(a.dateTime)); // Sort recent first
+
+            clientHistoryTableBody.innerHTML = '';
+            if (clientAppointments.length === 0) {
+                clientHistoryTableBody.innerHTML = '<tr><td colspan="4" class="text-center">No appointments found for this client.</td></tr>';
+                return;
+            }
+
+            clientAppointments.forEach(app => {
+                const service = servicesCache.find(s => s.id === app.serviceId);
+                const appDate = new Date(app.dateTime);
+                const row = clientHistoryTableBody.insertRow();
+                row.innerHTML = `
+                    <td>${appDate.toLocaleDateString()}</td>
+                    <td>${appDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
+                    <td>${service ? escapeHtml(service.name) : 'N/A'}</td>
+                    <td><span class="status-badge status-${app.status}">${escapeHtml(app.status)}</span></td>
+                `;
+            });
+        }
+
+        // --- APPOINTMENT MANAGEMENT ---
+        function openAppointmentModal(dateStr, timeStr, existingAppointment = null, preselectClientId = null) {
+            appointmentForm.reset();
+            populateClientDropdown(preselectClientId);
+            populateServiceDropdown();
+            deleteAppointmentBtn.classList.add('hidden');
+            editingAppointmentId = null;
+
+            if (existingAppointment) {
+                editingAppointmentId = existingAppointment.id;
+                document.getElementById('appointment-modal-title').textContent = 'Edit Appointment';
+                appointmentIdInput.value = existingAppointment.id;
+                appointmentClientSelect.value = existingAppointment.clientId;
+                appointmentServiceSelect.value = existingAppointment.serviceId;
+                const appDateTime = new Date(existingAppointment.dateTime);
+                appointmentDateInput.value = appDateTime.toISOString().split('T')[0];
+                appointmentTimeInput.value = appDateTime.toTimeString().substring(0,5);
+                appointmentStatusSelect.value = existingAppointment.status;
+                appointmentNotesInput.value = existingAppointment.notes || '';
+                deleteAppointmentBtn.classList.remove('hidden');
+            } else {
+                document.getElementById('appointment-modal-title').textContent = 'Book Appointment';
+                if (dateStr) appointmentDateInput.value = dateStr;
+                if (timeStr) appointmentTimeInput.value = timeStr;
+                appointmentStatusSelect.value = 'booked'; // Default status
+            }
+            openModal('appointment-modal', 'appointment-client');
+        }
+
+        async function handleAppointmentFormSubmit(e) {
+            e.preventDefault();
+            const appointmentData = {
+                clientId: parseInt(appointmentClientSelect.value),
+                serviceId: parseInt(appointmentServiceSelect.value),
+                dateTime: new Date(`${appointmentDateInput.value}T${appointmentTimeInput.value}`).toISOString(),
+                status: appointmentStatusSelect.value,
+                notes: appointmentNotesInput.value.trim()
+            };
+
+            if (isNaN(appointmentData.clientId) || isNaN(appointmentData.serviceId) || !appointmentDateInput.value || !appointmentTimeInput.value) {
+                alert('Please fill all required fields (Client, Service, Date, Time).');
+                return;
+            }
+
+            const service = servicesCache.find(s => s.id === appointmentData.serviceId);
+            if (!service) {
+                alert('Selected service not found.');
+                return;
+            }
+
+            // Check for conflicts (excluding self if editing)
+            const appointmentStart = new Date(appointmentData.dateTime);
+            const appointmentEnd = new Date(appointmentStart.getTime() + service.duration * 60000);
+
+            const conflictingAppointment = appointmentsCache.find(app => {
+                if (editingAppointmentId && app.id === editingAppointmentId) return false; // Don't conflict with self
+                if (app.status === 'cancelled') return false; // Cancelled appointments don't conflict
+
+                const existingAppService = servicesCache.find(s => s.id === app.serviceId);
+                if (!existingAppService) return false; // Should not happen
+
+                const existingAppStart = new Date(app.dateTime);
+                const existingAppEnd = new Date(existingAppStart.getTime() + existingAppService.duration * 60000);
+                
+                // Check for overlap: (StartA < EndB) and (EndA > StartB)
+                return appointmentStart < existingAppEnd && appointmentEnd > existingAppStart;
+            });
+
+            if (conflictingAppointment) {
+                alert('This time slot conflicts with an existing appointment.');
+                return;
+            }
+
+            // Check against availability rules
+            if (!isSlotAvailable(appointmentStart, service.duration)) {
+                 // isSlotAvailable checks against rules AND other appointments, but we did appointments above.
+                 // This specific check is more for being within general availability.
+                if (!isWithinAvailability(appointmentStart, service.duration)) {
+                    alert('The selected time is outside of your defined availability.');
+                    return;
+                }
+            }
+
+
+            try {
+                if (editingAppointmentId) {
+                    appointmentData.id = editingAppointmentId;
+                    await crud(STORES.APPOINTMENTS, 'put', appointmentData);
+                } else {
+                    await crud(STORES.APPOINTMENTS, 'add', appointmentData);
+                }
+                appointmentsCache = await crud(STORES.APPOINTMENTS, 'getAll');
+                renderCalendar();
+                closeModal('appointment-modal');
+                showToast('Appointment saved successfully!');
+            } catch (error) {
+                console.error('Error saving appointment:', error);
+                alert('Failed to save appointment.');
+            }
+        }
+
+        async function handleDeleteAppointment() {
+            if (!editingAppointmentId) return;
+            if (confirm('Are you sure you want to delete this appointment?')) {
+                try {
+                    await crud(STORES.APPOINTMENTS, 'delete', null, editingAppointmentId);
+                    appointmentsCache = await crud(STORES.APPOINTMENTS, 'getAll');
+                    renderCalendar();
+                    closeModal('appointment-modal');
+                    showToast('Appointment deleted.');
+                } catch (error) {
+                    console.error('Error deleting appointment:', error);
+                    alert('Failed to delete appointment.');
+                }
+            }
+        }
+
+        function populateClientDropdown(selectedClientId = null) {
+            appointmentClientSelect.innerHTML = '<option value="">Select Client</option>';
+            clientsCache.sort((a,b) => a.name.localeCompare(b.name)).forEach(client => {
+                const option = document.createElement('option');
+                option.value = client.id;
+                option.textContent = escapeHtml(client.name);
+                if (selectedClientId && client.id === selectedClientId) {
+                    option.selected = true;
+                }
+                appointmentClientSelect.appendChild(option);
+            });
+        }
+
+        function populateServiceDropdown(selectedServiceId = null) {
+            appointmentServiceSelect.innerHTML = '<option value="">Select Service</option>';
+            servicesCache.sort((a,b) => a.name.localeCompare(b.name)).forEach(service => {
+                const option = document.createElement('option');
+                option.value = service.id;
+                option.textContent = `${escapeHtml(service.name)} (${service.duration} min, ${formatCurrency(service.price)})`;
+                if (selectedServiceId && service.id === selectedServiceId) {
+                    option.selected = true;
+                }
+                appointmentServiceSelect.appendChild(option);
+            });
+        }
+
+        // --- CALENDAR ---
+        function setCalendarViewMode(mode) {
+            currentCalendarViewMode = mode;
+            document.querySelectorAll('.calendar-view-mode button').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`.calendar-view-mode button[data-viewmode="${mode}"]`).classList.add('active');
+            renderCalendar();
+        }
+
+        function navigateCalendarPeriod(direction) {
+            const currentMonth = currentCalendarDate.getMonth();
+            const currentYear = currentCalendarDate.getFullYear();
+            const currentDay = currentCalendarDate.getDate();
+
+            if (currentCalendarViewMode === 'month') {
+                currentCalendarDate.setMonth(currentMonth + direction);
+            } else if (currentCalendarViewMode === 'week') {
+                currentCalendarDate.setDate(currentDay + (direction * 7));
+            } else if (currentCalendarViewMode === 'day') {
+                currentCalendarDate.setDate(currentDay + direction);
+            }
+            renderCalendar();
+        }
+
+        function renderCalendar() {
+            if (currentCalendarViewMode === 'month') {
+                monthGridContainer.classList.remove('hidden');
+                timelineViewContainer.classList.add('hidden');
+                renderMonthView();
+            } else { // 'week' or 'day'
+                monthGridContainer.classList.add('hidden');
+                timelineViewContainer.classList.remove('hidden');
+                renderTimelineView();
+            }
+        }
+
+        function renderMonthView() {
+            monthGridContainer.innerHTML = ''; // Clear previous grid
+            const year = currentCalendarDate.getFullYear();
+            const month = currentCalendarDate.getMonth();
+            currentMonthYearEl.textContent = `${currentCalendarDate.toLocaleString('default', { month: 'long' })} ${year}`;
+
+            const firstDayOfMonth = new Date(year, month, 1);
+            const lastDayOfMonth = new Date(year, month + 1, 0);
+            const daysInMonth = lastDayOfMonth.getDate();
+            const startDayOfWeek = firstDayOfMonth.getDay(); // 0 (Sun) - 6 (Sat)
+
+            // Add day headers
+            const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            dayNames.forEach(dayName => {
+                const headerCell = document.createElement('div');
+                headerCell.classList.add('calendar-header-cell');
+                headerCell.textContent = dayName;
+                monthGridContainer.appendChild(headerCell);
+            });
+
+            // Add empty cells for days before the first of the month
+            for (let i = 0; i < startDayOfWeek; i++) {
+                const emptyCell = document.createElement('div');
+                emptyCell.classList.add('calendar-day-cell', 'other-month');
+                monthGridContainer.appendChild(emptyCell);
+            }
+
+            // Add day cells for the current month
+            for (let day = 1; day <= daysInMonth; day++) {
+                const cell = document.createElement('div');
+                cell.classList.add('calendar-day-cell');
+                const date = new Date(year, month, day);
+                cell.dataset.date = date.toISOString().split('T')[0];
+
+                const dayNumber = document.createElement('span');
+                dayNumber.classList.add('day-number');
+                dayNumber.textContent = day;
+                cell.appendChild(dayNumber);
+
+                if (isToday(date)) {
+                    cell.classList.add('today');
+                    cell.setAttribute('aria-current', 'date');
+                }
+
+                // Add appointment indicators
+                const appointmentsOnDay = getAppointmentsForDate(date);
+                if (appointmentsOnDay.length > 0) {
+                    const summary = document.createElement('div');
+                    summary.classList.add('day-appointments-summary');
+                    appointmentsOnDay.slice(0,3).forEach(() => { // Max 3 dots
+                        const dot = document.createElement('span');
+                        dot.classList.add('appointment-dot');
+                        summary.appendChild(dot);
+                    });
+                    if (appointmentsOnDay.length > 3) {
+                        summary.appendChild(document.createTextNode(`+${appointmentsOnDay.length - 3}`));
+                    }
+                    cell.appendChild(summary);
+                }
+                
+                cell.setAttribute('role', 'gridcell');
+                cell.setAttribute('tabindex', '0'); // Make focusable
+                cell.setAttribute('aria-label', `${date.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} - ${appointmentsOnDay.length} appointments`);
+
+                monthGridContainer.appendChild(cell);
+            }
+
+            // Add empty cells for days after the last of the month to fill the grid
+            const totalCells = startDayOfWeek + daysInMonth;
+            const remainingCells = (7 - (totalCells % 7)) % 7;
+            for (let i = 0; i < remainingCells; i++) {
+                const emptyCell = document.createElement('div');
+                emptyCell.classList.add('calendar-day-cell', 'other-month');
+                monthGridContainer.appendChild(emptyCell);
+            }
+        }
+
+        function renderTimelineView() {
+            const year = currentCalendarDate.getFullYear();
+            const month = currentCalendarDate.getMonth();
+            const day = currentCalendarDate.getDate();
+
+            timelineDayHeaders.innerHTML = '';
+            timelineTimeSlots.innerHTML = '';
+            timelineDayColumns.innerHTML = '';
+
+            let datesToDisplay = [];
+            if (currentCalendarViewMode === 'day') {
+                datesToDisplay.push(new Date(year, month, day));
+                currentMonthYearEl.textContent = currentCalendarDate.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            } else { // week view
+                const currentDayOfWeek = currentCalendarDate.getDay(); // 0 for Sunday
+                const weekStart = new Date(currentCalendarDate);
+                weekStart.setDate(day - currentDayOfWeek); // Go to Sunday of current week
+
+                for (let i = 0; i < 7; i++) {
+                    const d = new Date(weekStart);
+                    d.setDate(weekStart.getDate() + i);
+                    datesToDisplay.push(d);
+                }
+                const weekEnd = datesToDisplay[6];
+                currentMonthYearEl.textContent = `${datesToDisplay[0].toLocaleDateString(undefined, {month: 'short', day: 'numeric'})} - ${weekEnd.toLocaleDateString(undefined, {month: 'short', day: 'numeric', year: 'numeric'})}`;
+            }
+
+            // Determine overall min/max time from availability rules for the displayed days
+            let minHour = 23, maxHour = 0;
+            const activeRules = availabilityRulesCache.filter(rule => datesToDisplay.some(d => d.getDay() === rule.dayOfWeek));
+            
+            if (activeRules.length > 0) {
+                activeRules.forEach(rule => {
+                    minHour = Math.min(minHour, parseInt(rule.startTime.split(':')[0]));
+                    maxHour = Math.max(maxHour, parseInt(rule.endTime.split(':')[0]));
+                });
+                if (maxHour < 23) maxHour++; // Ensure the last hour slot is shown
+            } else { // Default if no rules
+                minHour = 8; maxHour = 18;
+            }
+            if (minHour > maxHour) { minHour = 8; maxHour = 18; } // Fallback if rules are weird
+
+            // Render time slot labels (e.g., 8:00 AM, 8:30 AM)
+            for (let h = minHour; h < maxHour; h++) {
+                for (let m = 0; m < 60; m += DEFAULT_SLOT_DURATION) {
+                    const timeLabel = document.createElement('div');
+                    timeLabel.classList.add('time-slot-label');
+                    const d = new Date(2000,0,1,h,m); // Dummy date for formatting
+                    timeLabel.textContent = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+                    timelineTimeSlots.appendChild(timeLabel);
+                }
+            }
+
+            // Render day columns
+            datesToDisplay.forEach(date => {
+                const dayHeader = document.createElement('div');
+                dayHeader.classList.add('day-column-header');
+                dayHeader.textContent = `${date.toLocaleDateString(undefined, {weekday: 'short'})} ${date.getDate()}`;
+                if (isToday(date)) dayHeader.classList.add('today');
+                timelineDayHeaders.appendChild(dayHeader);
+
+                const dayColumn = document.createElement('div');
+                dayColumn.classList.add('day-column');
+                dayColumn.dataset.date = date.toISOString().split('T')[0];
+
+                for (let h = minHour; h < maxHour; h++) {
+                    for (let m = 0; m < 60; m += DEFAULT_SLOT_DURATION) {
+                        const slotTime = new Date(date.getFullYear(), date.getMonth(), date.getDate(), h, m);
+                        const slot = document.createElement('div');
+                        slot.classList.add('slot');
+                        slot.dataset.time = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+                        slot.dataset.datetime = slotTime.toISOString();
+                        
+                        if (!isSlotAvailable(slotTime, DEFAULT_SLOT_DURATION)) {
+                            slot.classList.add('unavailable');
+                            slot.setAttribute('aria-disabled', 'true');
+                            slot.setAttribute('aria-label', `Slot at ${slotTime.toLocaleTimeString()} is unavailable`);
+                        } else {
+                            slot.setAttribute('aria-label', `Book slot at ${slotTime.toLocaleTimeString()}`);
+                            slot.setAttribute('role', 'button');
+                            slot.setAttribute('tabindex', '0');
+                        }
+                        dayColumn.appendChild(slot);
+                    }
+                }
+                // Render appointments for this day
+                const appointmentsOnDay = getAppointmentsForDate(date);
+                appointmentsOnDay.forEach(app => {
+                    if (app.status === 'cancelled') return; // Don't display cancelled ones as blocks
+
+                    const service = servicesCache.find(s => s.id === app.serviceId);
+                    if (!service) return;
+
+                    const appStart = new Date(app.dateTime);
+                    const appEnd = new Date(appStart.getTime() + service.duration * 60000);
+
+                    // Calculate position and height
+                    const startHour = appStart.getHours();
+                    const startMinute = appStart.getMinutes();
+                    
+                    // Only render if appointment is within the displayed timeline hours
+                    if (startHour >= minHour && appStart.getHours() < maxHour) {
+                        const topOffset = ((startHour - minHour) * 60 + startMinute) / DEFAULT_SLOT_DURATION * 50; // 50px per slot
+                        const height = (service.duration / DEFAULT_SLOT_DURATION) * 50;
+
+                        const appBlock = document.createElement('div');
+                        appBlock.classList.add('appointment-block', app.status);
+                        appBlock.style.top = `${topOffset}px`;
+                        appBlock.style.height = `${height - 2}px`; // -2 for border/padding
+                        
+                        const client = clientsCache.find(c => c.id === app.clientId);
+                        appBlock.textContent = `${service.name} - ${client ? client.name : 'N/A'}`;
+                        appBlock.title = `${service.name} with ${client ? client.name : 'N/A'} at ${appStart.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}`;
+                        appBlock.dataset.appointmentId = app.id;
+                        appBlock.setAttribute('role', 'button');
+                        appBlock.setAttribute('tabindex', '0');
+                        appBlock.setAttribute('aria-label', `Edit appointment: ${appBlock.title}`);
+                        dayColumn.appendChild(appBlock);
+                    }
+                });
+                timelineDayColumns.appendChild(dayColumn);
+            });
+        }
+
+        function handleCalendarSlotClick(e) {
+            const target = e.target;
+            // Monthly view day cell click
+            if (target.closest('.calendar-day-cell:not(.other-month)')) {
+                const cell = target.closest('.calendar-day-cell');
+                const dateStr = cell.dataset.date;
+                if (currentCalendarViewMode === 'month') { // If in month view, switch to day view for this date
+                    currentCalendarDate = new Date(dateStr + 'T00:00:00'); // Ensure local timezone interpretation
+                    setCalendarViewMode('day');
+                } else { // Should not happen if logic is correct, but as fallback:
+                    openAppointmentModal(dateStr);
+                }
+                return;
+            }
+
+            // Timeline view slot click
+            if (target.classList.contains('slot') && !target.classList.contains('unavailable')) {
+                const dayColumn = target.closest('.day-column');
+                const dateStr = dayColumn.dataset.date;
+                const timeStr = target.dataset.time;
+                openAppointmentModal(dateStr, timeStr);
+                return;
+            }
+
+            // Timeline view appointment block click
+            if (target.closest('.appointment-block')) {
+                const appBlock = target.closest('.appointment-block');
+                const appointmentId = parseInt(appBlock.dataset.appointmentId);
+                const appointment = appointmentsCache.find(app => app.id === appointmentId);
+                if (appointment) {
+                    openAppointmentModal(null, null, appointment);
+                }
+                return;
+            }
+        }
+
+        function getAppointmentsForDate(date) {
+            const dateStr = date.toISOString().split('T')[0];
+            return appointmentsCache.filter(app => app.dateTime.startsWith(dateStr) && app.status !== 'cancelled');
+        }
+
+        function isToday(date) {
+            const today = new Date();
+            return date.getDate() === today.getDate() &&
+                   date.getMonth() === today.getMonth() &&
+                   date.getFullYear() === today.getFullYear();
+        }
+
+        // --- AVAILABILITY ---
+        function isWithinAvailability(dateTime, durationMinutes) {
+            const dayOfWeek = dateTime.getDay(); // 0 (Sun) - 6 (Sat)
+            const rulesForDay = availabilityRulesCache.filter(rule => rule.dayOfWeek === dayOfWeek);
+
+            if (rulesForDay.length === 0) return false; // No availability defined for this day
+
+            const appointmentStartMinutes = dateTime.getHours() * 60 + dateTime.getMinutes();
+            const appointmentEndMinutes = appointmentStartMinutes + durationMinutes;
+
+            return rulesForDay.some(rule => {
+                const ruleStartMinutes = timeToMinutes(rule.startTime);
+                const ruleEndMinutes = timeToMinutes(rule.endTime);
+                return appointmentStartMinutes >= ruleStartMinutes && appointmentEndMinutes <= ruleEndMinutes;
+            });
+        }
+
+        function isSlotAvailable(slotDateTime, durationMinutes) {
+            // 1. Check against general availability rules
+            if (!isWithinAvailability(slotDateTime, durationMinutes)) {
+                return false;
+            }
+
+            // 2. Check for conflicts with existing appointments
+            const slotStart = new Date(slotDateTime);
+            const slotEnd = new Date(slotStart.getTime() + durationMinutes * 60000);
+
+            return !appointmentsCache.some(app => {
+                if (app.status === 'cancelled') return false;
+                const existingAppService = servicesCache.find(s => s.id === app.serviceId);
+                if (!existingAppService) return false;
+
+                const existingAppStart = new Date(app.dateTime);
+                const existingAppEnd = new Date(existingAppStart.getTime() + existingAppService.duration * 60000);
+                
+                return slotStart < existingAppEnd && slotEnd > existingAppStart; // Overlap
+            });
+        }
+
+        function timeToMinutes(timeStr) { // "HH:mm"
+            const [hours, minutes] = timeStr.split(':').map(Number);
+            return hours * 60 + minutes;
+        }
+
+        function renderAvailabilityRules() {
+            availabilityRulesContainer.innerHTML = '';
+            const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+            
+            // Group rules by day for easier display, or just list them
+            // For simplicity, just list them, sorted by day then time
+            const sortedRules = [...availabilityRulesCache].sort((a,b) => {
+                if (a.dayOfWeek !== b.dayOfWeek) return a.dayOfWeek - b.dayOfWeek;
+                return timeToMinutes(a.startTime) - timeToMinutes(b.startTime);
+            });
+
+            if (sortedRules.length === 0) {
+                availabilityRulesContainer.innerHTML = '<p>No availability rules set. Click "Add Availability Rule" to define your working hours.</p>';
+            }
+
+            sortedRules.forEach(rule => {
+                addAvailabilityRuleRow(rule, false); // false means don't add to cache, just render
+            });
+        }
+
+        function addAvailabilityRuleRow(rule = null, addToCache = true) {
+            const ruleDiv = document.createElement('div');
+            ruleDiv.classList.add('form-group', 'availability-rule-item');
+            ruleDiv.style.display = 'flex';
+            ruleDiv.style.gap = '0.5rem';
+            ruleDiv.style.alignItems = 'center';
+            ruleDiv.style.marginBottom = '0.5rem';
+
+            const ruleId = rule ? rule.id : Date.now(); // Temporary ID for new unsaved rules
+            ruleDiv.dataset.ruleId = ruleId;
+
+            const daySelect = document.createElement('select');
+            daySelect.innerHTML = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+                .map((day, i) => `<option value="${i}">${day}</option>`).join('');
+            daySelect.value = rule ? rule.dayOfWeek : '1'; // Default to Monday
+            daySelect.setAttribute('aria-label', 'Day of week');
+
+            const startTimeInput = document.createElement('input');
+            startTimeInput.type = 'time';
+            startTimeInput.value = rule ? rule.startTime : '09:00';
+            startTimeInput.setAttribute('aria-label', 'Start time');
+
+            const endTimeInput = document.createElement('input');
+            endTimeInput.type = 'time';
+            endTimeInput.value = rule ? rule.endTime : '17:00';
+            endTimeInput.setAttribute('aria-label', 'End time');
+
+            const saveButton = document.createElement('button');
+            saveButton.textContent = 'Save';
+            saveButton.classList.add('button', 'small', 'save-rule');
+            saveButton.type = 'button';
+
+            const deleteButton = document.createElement('button');
+            deleteButton.textContent = 'Delete';
+            deleteButton.classList.add('button', 'small', 'danger', 'delete-rule');
+            deleteButton.type = 'button';
+            if (!rule) deleteButton.classList.add('hidden'); // Hide delete for new unsaved rule initially
+
+            ruleDiv.append(daySelect, document.createTextNode(' from '), startTimeInput, document.createTextNode(' to '), endTimeInput, saveButton, deleteButton);
+            availabilityRulesContainer.appendChild(ruleDiv);
+
+            if (addToCache && !rule) { // This is a new rule being added by user click
+                // Don't add to cache yet, only on save.
+                // The 'addAvailabilityRuleBtn' click just adds the UI row.
+            }
+        }
+
+        async function handleAvailabilityRuleActions(e) {
+            const target = e.target;
+            const ruleItemDiv = target.closest('.availability-rule-item');
+            if (!ruleItemDiv) return;
+
+            const ruleId = ruleItemDiv.dataset.ruleId; // This might be a temp ID or DB ID
+
+            if (target.classList.contains('save-rule')) {
+                const dayOfWeek = parseInt(ruleItemDiv.querySelector('select').value);
+                const startTime = ruleItemDiv.querySelector('input[type="time"]:nth-of-type(1)').value;
+                const endTime = ruleItemDiv.querySelector('input[type="time"]:nth-of-type(2)').value;
+
+                if (!startTime || !endTime || timeToMinutes(startTime) >= timeToMinutes(endTime)) {
+                    alert('Invalid time range. End time must be after start time.');
+                    return;
+                }
+                
+                const ruleData = { dayOfWeek, startTime, endTime };
+                try {
+                    let savedRule;
+                    // Check if it's an existing rule (has a numeric ID from DB) or a new one (temp string ID)
+                    const existingRule = availabilityRulesCache.find(r => r.id === parseInt(ruleId));
+                    if (existingRule) {
+                        ruleData.id = existingRule.id;
+                        savedRule = await crud(STORES.AVAILABILITY, 'put', ruleData);
+                    } else {
+                        // This is a new rule, add it
+                        savedRule = await crud(STORES.AVAILABILITY, 'add', ruleData);
+                        // Update the dataset.ruleId to the new DB-generated ID
+                        ruleItemDiv.dataset.ruleId = savedRule.id; 
+                        ruleItemDiv.querySelector('.delete-rule').classList.remove('hidden');
+                    }
+                    availabilityRulesCache = await crud(STORES.AVAILABILITY, 'getAll');
+                    // Re-render rules to ensure order and clean UI, or just update this one
+                    renderAvailabilityRules(); // Simpler to re-render all
+                    renderCalendar(); // Availability changed
+                    showToast('Availability rule saved.');
+                } catch (error) {
+                    console.error('Error saving availability rule:', error);
+                    alert('Failed to save rule.');
+                }
+            } else if (target.classList.contains('delete-rule')) {
+                if (confirm('Are you sure you want to delete this availability rule?')) {
+                    try {
+                        const dbRuleId = parseInt(ruleId);
+                        if (!isNaN(dbRuleId)) { // Only delete if it's a saved rule with a DB ID
+                            await crud(STORES.AVAILABILITY, 'delete', null, dbRuleId);
+                            availabilityRulesCache = await crud(STORES.AVAILABILITY, 'getAll');
+                            renderAvailabilityRules();
+                            renderCalendar(); // Availability changed
+                            showToast('Availability rule deleted.');
+                        } else { // It's a new, unsaved rule row
+                            ruleItemDiv.remove();
+                        }
+                    } catch (error) {
+                        console.error('Error deleting availability rule:', error);
+                        alert('Failed to delete rule.');
+                    }
+                }
+            }
+        }
+
+        // --- REMINDERS (Notification API) ---
+        function requestNotificationPermission() {
+            if (!('Notification' in window)) {
+                alert('This browser does not support desktop notification');
+                notificationStatusEl.textContent = 'Notifications not supported.';
+                return;
+            }
+
+            if (Notification.permission === 'granted') {
+                notificationStatusEl.textContent = 'Notifications are enabled.';
+                new Notification('AppointMe Solo', { body: 'Notifications enabled!' });
+            } else if (Notification.permission !== 'denied') {
+                Notification.requestPermission().then(permission => {
+                    if (permission === 'granted') {
+                        notificationStatusEl.textContent = 'Notifications enabled.';
+                        new Notification('AppointMe Solo', { body: 'Notifications enabled!' });
+                    } else {
+                        notificationStatusEl.textContent = 'Notifications denied.';
+                    }
+                });
+            } else {
+                notificationStatusEl.textContent = 'Notifications are denied. Please enable them in browser settings.';
+            }
+        }
+
+        async function checkReminders() {
+            if (Notification.permission !== 'granted') return;
+
+            const now = new Date();
+            const reminderWindowEnd = new Date(now.getTime() + REMINDER_LEAD_TIME);
+
+            const upcomingAppointments = appointmentsCache.filter(app => {
+                const appTime = new Date(app.dateTime);
+                return app.status !== 'cancelled' && app.status !== 'completed' && // Only for booked/confirmed
+                       appTime > now && appTime <= reminderWindowEnd &&
+                       !app.reminded; // Check for a custom 'reminded' flag
+            });
+
+            for (const app of upcomingAppointments) {
+                const service = servicesCache.find(s => s.id === app.serviceId);
+                const client = clientsCache.find(c => c.id === app.clientId);
+                const appTime = new Date(app.dateTime);
+
+                const title = 'Upcoming Appointment Reminder';
+                const body = `Appointment for ${service ? service.name : 'Service'} with ${client ? client.name : 'Client'} at ${appTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}.`;
+                
+                new Notification(title, { body, icon: './favicon.ico' }); // Replace with a proper icon if available
+
+                // Mark as reminded to avoid duplicate notifications
+                app.reminded = true; // This is an in-memory flag for the session
+                // For persistence, you'd need to save this back to IndexedDB, but that might be overkill for simple reminders.
+                // Or, use a temporary list of reminded appointment IDs for the current session.
+            }
+        }
+
+
+        // --- EXPORT ---
+        async function exportAppointmentsToCSV() {
+            if (appointmentsCache.length === 0) {
+                alert('No appointments to export.');
+                return;
+            }
+
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "Date,Time,Client Name,Client Contact,Service Name,Duration (min),Price,Status,Notes\r\n";
+
+            const sortedAppointments = [...appointmentsCache].sort((a,b) => new Date(a.dateTime) - new Date(b.dateTime));
+
+            for (const app of sortedAppointments) {
+                const client = clientsCache.find(c => c.id === app.clientId) || {};
+                const service = servicesCache.find(s => s.id === app.serviceId) || {};
+                const appDate = new Date(app.dateTime);
+
+                const row = [
+                    appDate.toLocaleDateString(),
+                    appDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                    client.name || 'N/A',
+                    client.contact || 'N/A',
+                    service.name || 'N/A',
+                    service.duration || 'N/A',
+                    service.price !== undefined ? formatCurrency(service.price, false) : 'N/A', // No currency symbol for CSV
+                    app.status,
+                    app.notes || ''
+                ].map(field => `"${String(field).replace(/"/g, '""')}"`).join(','); // Escape quotes
+                csvContent += row + "\r\n";
+            }
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "appointments.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast('Appointments exported to CSV.');
+        }
+
+        async function exportAppointmentsToICS() {
+            if (appointmentsCache.length === 0) {
+                alert('No appointments to export.');
+                return;
+            }
+
+            let icsContent = [
+                'BEGIN:VCALENDAR',
+                'VERSION:2.0',
+                'PRODID:-//AppointMeSolo//EN',
+            ];
+
+            const sortedAppointments = [...appointmentsCache].sort((a,b) => new Date(a.dateTime) - new Date(b.dateTime));
+
+            for (const app of sortedAppointments) {
+                if (app.status === 'cancelled') continue; // Typically don't export cancelled events
+
+                const client = clientsCache.find(c => c.id === app.clientId) || {};
+                const service = servicesCache.find(s => s.id === app.serviceId) || {};
+                if (!service.duration) continue; // Cannot create event without duration
+
+                const startDate = new Date(app.dateTime);
+                const endDate = new Date(startDate.getTime() + service.duration * 60000);
+
+                const uid = `${app.id}-${startDate.getTime()}@appointmesolo.app`;
+                const dtstamp = toICSDateTime(new Date());
+                const dtstart = toICSDateTime(startDate);
+                const dtend = toICSDateTime(endDate);
+
+                let description = `Service: ${service.name || 'N/A'}\\n`;
+                description += `Client: ${client.name || 'N/A'}\\n`;
+                if (client.contact) description += `Contact: ${client.contact}\\n`;
+                if (app.notes) description += `Notes: ${app.notes.replace(/\n/g, '\\n')}\\n`;
+                
+                let icsStatus = 'CONFIRMED'; // Default
+                if (app.status === 'completed') icsStatus = 'CONFIRMED'; // ICS doesn't have 'completed' directly, often mapped to CONFIRMED
+                // if (app.status === 'cancelled') icsStatus = 'CANCELLED'; // We are skipping cancelled ones
+
+                icsContent.push(
+                    'BEGIN:VEVENT',
+                    `UID:${uid}`,
+                    `DTSTAMP:${dtstamp}`,
+                    `DTSTART:${dtstart}`,
+                    `DTEND:${dtend}`,
+                    `SUMMARY:${service.name || 'Appointment'} - ${client.name || 'Client'}`,
+                    `DESCRIPTION:${description}`,
+                    `STATUS:${icsStatus}`,
+                    'END:VEVENT'
+                );
+            }
+
+            icsContent.push('END:VCALENDAR');
+            
+            const icsFileContent = icsContent.join('\r\n');
+            const encodedUri = encodeURI(`data:text/calendar;charset=utf-8,${icsFileContent}`);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "appointments.ics");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast('Appointments exported to ICS.');
+        }
+
+        function toICSDateTime(date) {
+            // Format: YYYYMMDDTHHMMSSZ
+            return date.toISOString().replace(/[-:.]/g, "").slice(0, -4) + 'Z';
+        }
+
+        // --- UTILITIES ---
+        function escapeHtml(str) {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function formatCurrency(amount, includeSymbol = true) {
+            const options = { style: 'currency', currency: 'USD' }; // Default, can be made configurable
+            if (!includeSymbol) {
+                options.currencyDisplay = 'code'; // Or just use toFixed(2)
+                return Number(amount).toFixed(2);
+            }
+            try {
+                return new Intl.NumberFormat(undefined, options).format(amount);
+            } catch (e) { // Fallback for very old browsers or if Intl not fully supported
+                return (includeSymbol ? '$' : '') + Number(amount).toFixed(2);
+            }
+        }
+        
+        let toastTimeout;
+        function showToast(message, duration = 3000) {
+            let toast = document.getElementById('toast-notification');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'toast-notification';
+                toast.style.position = 'fixed';
+                toast.style.bottom = '20px';
+                toast.style.left = '50%';
+                toast.style.transform = 'translateX(-50%)';
+                toast.style.backgroundColor = 'var(--primary-color)';
+                toast.style.color = 'white';
+                toast.style.padding = '10px 20px';
+                toast.style.borderRadius = '5px';
+                toast.style.zIndex = '2000';
+                toast.style.boxShadow = '0 2px 10px rgba(0,0,0,0.2)';
+                toast.style.opacity = '0';
+                toast.style.transition = 'opacity 0.3s ease';
+                document.body.appendChild(toast);
+            }
+            toast.textContent = message;
+            toast.style.opacity = '1';
+
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.style.opacity = '0';
+            }, duration);
+        }
+
+    })();
+    </script>
+</body>
+</html>
